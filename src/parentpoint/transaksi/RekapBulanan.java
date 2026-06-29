@@ -49,7 +49,7 @@ public class RekapBulanan extends JFrame {
     private void initComponents() {
         setTitle("PARENT POINT - Rekap Kehadiran Bulanan");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(1050, 680);
+// setSize removed for responsiveness
         setLocationRelativeTo(null);
         getContentPane().setLayout(new BorderLayout());
 
@@ -345,6 +345,7 @@ public class RekapBulanan extends JFrame {
     }
 
     private void styleComponents() {
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         // already handled inside initComponents
     }
 

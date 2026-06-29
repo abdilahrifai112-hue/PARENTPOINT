@@ -542,6 +542,7 @@ public class report extends javax.swing.JFrame {
     }
 
     private void styleComponents() {
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         setTitle("PARENT POINT - Laporan Kehadiran");
         getContentPane().setBackground(DesignUtil.BG_MAIN);
         
@@ -709,7 +710,7 @@ public class report extends javax.swing.JFrame {
         jPanel2.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
         
         pack();
-        setSize(1060, 720);
+// setSize removed for responsiveness
         setLocationRelativeTo(null);
         
         revalidate();

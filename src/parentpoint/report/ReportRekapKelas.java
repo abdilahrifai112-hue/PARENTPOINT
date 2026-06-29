@@ -47,7 +47,7 @@ public class ReportRekapKelas extends JFrame {
     private void initComponents() {
         setTitle("PARENT POINT - Laporan Rekap Per Kelas");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(950, 650);
+// setSize removed for responsiveness
         setLocationRelativeTo(null);
         getContentPane().setLayout(new BorderLayout());
 
@@ -325,7 +325,8 @@ public class ReportRekapKelas extends JFrame {
         ((DefaultTableModel) tblData.getModel()).setRowCount(0);
     }
 
-    private void styleComponents() {}
+    private void styleComponents() {
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);}
 
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(() -> new ReportRekapKelas().setVisible(true));

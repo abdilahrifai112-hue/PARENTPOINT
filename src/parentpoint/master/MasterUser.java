@@ -30,6 +30,7 @@ public class MasterUser extends JFrame {
     }
 
     private void styleComponents() {
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         setTitle("PARENT POINT - Manajemen User");
         setLocationRelativeTo(null);
         getContentPane().setBackground(DesignUtil.BG_MAIN);
@@ -122,9 +123,7 @@ public class MasterUser extends JFrame {
                 btnSimpan.setEnabled(false);
             }
         });
-        
-        setSize(720, 520);
-
+// setSize removed for responsiveness
         // ── Tombol Kembali ke Dashboard ──
         addKembaliButton();
     }

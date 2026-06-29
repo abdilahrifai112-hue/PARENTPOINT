@@ -29,6 +29,7 @@ public class MasterKelas extends JFrame {
     }
 
     private void styleComponents() {
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         setTitle("PARENT POINT - Master Data Kelas");
         setLocationRelativeTo(null);
         getContentPane().setBackground(DesignUtil.BG_MAIN);
@@ -107,9 +108,7 @@ public class MasterKelas extends JFrame {
                 btnSimpan.setEnabled(false);
             }
         });
-        
-        setSize(780, 580);
-
+// setSize removed for responsiveness
         // ── Tombol Kembali ke Dashboard ──
         addKembaliButton();
     }

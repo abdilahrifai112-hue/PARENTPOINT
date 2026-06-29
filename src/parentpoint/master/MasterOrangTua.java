@@ -31,6 +31,7 @@ public class MasterOrangTua extends JFrame {
     }
 
     private void styleComponents() {
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         setTitle("PARENT POINT - Master Data Orang Tua");
         setLocationRelativeTo(null);
         getContentPane().setBackground(DesignUtil.BG_MAIN);
@@ -130,9 +131,7 @@ public class MasterOrangTua extends JFrame {
                 btnSimpan.setEnabled(false);
             }
         });
-        
-        setSize(1000, 650);
-
+// setSize removed for responsiveness
         // ── Tombol Kembali ke Dashboard ──
         addKembaliButton();
     }

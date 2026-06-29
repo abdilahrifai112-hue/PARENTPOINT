@@ -33,6 +33,7 @@ public class MasterSiswa extends JFrame {
     }
 
     private void styleComponents() {
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         setTitle("PARENT POINT - Master Data Siswa");
         setLocationRelativeTo(null);
         getContentPane().setBackground(DesignUtil.BG_MAIN);
@@ -143,9 +144,7 @@ public class MasterSiswa extends JFrame {
                 btnSimpan.setEnabled(false);
             }
         });
-        
-        setSize(1000, 680);
-
+// setSize removed for responsiveness
         // ── Tombol Kembali ke Dashboard ──
         addKembaliButton();
     }

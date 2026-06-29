@@ -36,6 +36,7 @@ public class dsmainframe extends javax.swing.JFrame {
     }
 
     private void styleComponents() {
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         setTitle("PARENT POINT - Menu Utama");
         getContentPane().setBackground(DesignUtil.BG_MAIN);
         
@@ -311,8 +312,7 @@ public class dsmainframe extends javax.swing.JFrame {
         jButton10.addActionListener(e -> new parentpoint.report.ReportRekapSiswa().setVisible(true));
         jButton11.addActionListener(e -> new parentpoint.report.ReportRekapKelas().setVisible(true));
         jButton12.addActionListener(e -> new parentpoint.report.ReportAlpha().setVisible(true));
-
-        setSize(1100, 720);
+// setSize removed for responsiveness
         setLocationRelativeTo(null);
     }
 

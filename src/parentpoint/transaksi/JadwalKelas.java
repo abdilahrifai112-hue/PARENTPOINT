@@ -34,7 +34,7 @@ public class JadwalKelas extends JFrame {
     private void initComponents() {
         setTitle("PARENT POINT - Jadwal Kelas");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(900, 600);
+// setSize removed for responsiveness
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
         getContentPane().setBackground(DesignUtil.BG_MAIN);

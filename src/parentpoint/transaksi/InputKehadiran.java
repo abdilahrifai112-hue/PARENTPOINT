@@ -298,6 +298,7 @@ public class InputKehadiran extends JFrame {
     }
 
     private void styleComponents() {
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         // Apply BasicButtonUI for cross-platform visual consistency
         JButton[] buttons = {btnLoad, btnHadirSemua, btnSimpan};
         Color[] bgColors = {DesignUtil.PRIMARY, DesignUtil.SUCCESS, DesignUtil.SUCCESS};
@@ -365,7 +366,7 @@ public class InputKehadiran extends JFrame {
         });
 
         // Set dimensions to prevent cutoffs
-        setSize(900, 650);
+// setSize removed for responsiveness
         setLocationRelativeTo(null);
 
         // ── Tombol Kembali ke Dashboard ──
