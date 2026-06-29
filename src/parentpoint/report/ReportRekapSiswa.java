@@ -41,6 +41,7 @@ public class ReportRekapSiswa extends JFrame {
 
     public ReportRekapSiswa() {
         initComponents();
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         styleComponents();
         loadKelas();
     }

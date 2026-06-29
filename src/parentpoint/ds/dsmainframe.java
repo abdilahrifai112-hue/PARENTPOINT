@@ -30,6 +30,7 @@ public class dsmainframe extends javax.swing.JFrame {
 
     public dsmainframe() {
         initComponents();
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         styleComponents();
         loadDashboardData();
     }

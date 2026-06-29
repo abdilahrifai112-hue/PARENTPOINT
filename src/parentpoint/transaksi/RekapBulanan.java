@@ -41,6 +41,7 @@ public class RekapBulanan extends JFrame {
 
     public RekapBulanan() {
         initComponents();
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         styleComponents();
         loadKelas();
     }

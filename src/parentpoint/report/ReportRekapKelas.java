@@ -40,6 +40,7 @@ public class ReportRekapKelas extends JFrame {
 
     public ReportRekapKelas() {
         initComponents();
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         styleComponents();
     }
 

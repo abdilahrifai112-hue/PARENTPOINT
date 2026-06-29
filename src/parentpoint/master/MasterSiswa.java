@@ -26,6 +26,7 @@ public class MasterSiswa extends JFrame {
 
     public MasterSiswa() {
         initComponents();
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         styleComponents();
         loadData();
         loadKelas();

@@ -32,6 +32,7 @@ public class InputKehadiran extends JFrame {
 
     public InputKehadiran() {
         initComponents();
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         styleComponents();
         loadKelas();
         tfTanggal.setText(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));

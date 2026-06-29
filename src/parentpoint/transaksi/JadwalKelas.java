@@ -20,6 +20,7 @@ public class JadwalKelas extends JFrame {
     public JadwalKelas() {
         isAdmin = "admin".equalsIgnoreCase(Session.getRole());
         initComponents();
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         loadData();
     }
 

@@ -24,6 +24,7 @@ public class MasterUser extends JFrame {
 
     public MasterUser() {
         initComponents();
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         styleComponents();
         loadData();
     }

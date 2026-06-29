@@ -23,6 +23,7 @@ public class MasterKelas extends JFrame {
 
     public MasterKelas() {
         initComponents();
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         styleComponents();
         loadData();
     }

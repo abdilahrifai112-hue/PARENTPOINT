@@ -1,42 +1,29 @@
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.charset.StandardCharsets;
+import java.io.*;
+import java.nio.file.*;
+import java.util.*;
+import java.util.stream.*;
 
 public class FixJavaFiles {
     public static void main(String[] args) throws Exception {
-        String baseDir = "c:/Users/HP/Documents/NetBeansProjects/PARENTPOINT/src/parentpoint";
-        String[] files = {
-            "LOGIN/LOGIN.java",
-            "ds/dsmainframe.java",
-            "master/MasterKelas.java",
-            "master/MasterOrangTua.java",
-            "master/MasterSiswa.java",
-            "master/MasterUser.java",
-            "report/report.java",
-            "transaksi/InputKehadiran.java"
-        };
-        
-        for (String f : files) {
-            File file = new File(baseDir, f);
-            if (!file.exists()) continue;
+        List<Path> files = Files.walk(Paths.get("src/parentpoint"))
+                                .filter(Files::isRegularFile)
+                                .filter(p -> p.toString().endsWith(".java"))
+                                .collect(Collectors.toList());
+
+        for (Path file : files) {
+            String pathStr = file.toString().replace("\\", "/");
+            if (pathStr.contains("LOGIN.java") || pathStr.contains("koneksi.java") || pathStr.contains("DesignUtil.java") || pathStr.contains("Session.java")) {
+                continue;
+            }
             
-            String content = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
+            String content = new String(Files.readAllBytes(file));
             
-            // Fix the corrupted lines:
-            // $([1].Split('.')[0]).setContentAreaFilled(false);
-            // .setOpaque(true);
-            // This is completely broken. Let's remove them.
-            content = content.replaceAll("\\$\\(.*setContentAreaFilled\\(false\\);\\s*\\.setOpaque\\(true\\);\\s*", "");
-            
-            // Let's also find all jButtonX declarations and add setContentAreaFilled/setOpaque correctly if they are missing
-            // Wait, we don't even need to add it to .java!
-            // NetBeans generates the .java based on the .form!
-            // If I just open NetBeans, it will rewrite the .java anyway!
-            // But to make it compile, I just need to remove the corrupted lines.
-            
-            Files.write(file.toPath(), content.getBytes(StandardCharsets.UTF_8));
-            System.out.println("Fixed " + f);
+            // Only inject if it has initComponents(); and doesn't already have setExtendedState
+            if (content.contains("initComponents();") && !content.contains("setExtendedState")) {
+                content = content.replace("initComponents();", "initComponents();\n        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);");
+                Files.write(file, content.getBytes());
+                System.out.println("Updated: " + file);
+            }
         }
     }
 }

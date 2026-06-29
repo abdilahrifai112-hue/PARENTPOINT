@@ -24,6 +24,7 @@ public class MasterOrangTua extends JFrame {
 
     public MasterOrangTua() {
         initComponents();
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         styleComponents();
         loadData();
         loadSiswa();

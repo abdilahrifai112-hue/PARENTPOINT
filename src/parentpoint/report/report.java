@@ -32,6 +32,7 @@ public class report extends javax.swing.JFrame {
 
     public report() {
         initComponents();
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         setTitle("PARENT POINT - Laporan Kehadiran");
         setLocationRelativeTo(null);
         

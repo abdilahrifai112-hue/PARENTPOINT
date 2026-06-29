@@ -45,6 +45,7 @@ public class ReportAlpha extends JFrame {
 
     public ReportAlpha() {
         initComponents();
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         styleComponents();
         loadKelas();
     }
