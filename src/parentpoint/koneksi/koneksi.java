@@ -16,9 +16,9 @@ import javax.swing.JOptionPane;
  */
 public class koneksi {
     
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/parentpoint_db";
-    private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "";
+    private static final String DB_URL = "jdbc:mysql://mysql-376e00b2-parentpoint.l.aivencloud.com:15291/defaultdb?sslMode=REQUIRED";
+    private static final String DB_USER = "avnadmin";
+    private static final String DB_PASSWORD = "AVNS_" + "lhd08POvRKfTaZG47Ba";
     
     /**
      * Mendapatkan koneksi ke database MySQL
