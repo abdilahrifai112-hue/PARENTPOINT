@@ -15,7 +15,10 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(50) NOT NULL UNIQUE,
     password VARCHAR(100) NOT NULL,
     role VARCHAR(20) NOT NULL DEFAULT 'admin',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    siswa_id INT DEFAULT NULL,
+    guru_nama VARCHAR(100) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (siswa_id) REFERENCES siswa(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- ============================================
@@ -57,6 +60,21 @@ CREATE TABLE IF NOT EXISTS orang_tua (
 ) ENGINE=InnoDB;
 
 -- ============================================
+-- Tabel Jadwal Kelas
+-- ============================================
+CREATE TABLE IF NOT EXISTS jadwal_kelas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    kelas_id INT NOT NULL,
+    hari VARCHAR(20) NOT NULL,
+    jam_mulai TIME NOT NULL,
+    jam_selesai TIME NOT NULL,
+    mata_pelajaran VARCHAR(100) NOT NULL,
+    guru VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (kelas_id) REFERENCES kelas(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- ============================================
 -- Tabel Kehadiran
 -- ============================================
 CREATE TABLE IF NOT EXISTS kehadiran (
@@ -74,8 +92,10 @@ CREATE TABLE IF NOT EXISTS kehadiran (
 -- ============================================
 
 -- Admin default (username: admin, password: admin123)
-INSERT INTO users (username, password, role) VALUES
-('admin', 'admin123', 'admin');
+INSERT INTO users (username, password, role, siswa_id, guru_nama) VALUES
+('admin', 'admin123', 'admin', NULL, NULL),
+('ortu1', 'ortu123', 'orang_tua', 1, NULL),
+('guru1', 'guru123', 'guru', NULL, 'Ibu Sari');
 
 -- Data Kelas
 INSERT INTO kelas (nama_kelas, wali_kelas) VALUES

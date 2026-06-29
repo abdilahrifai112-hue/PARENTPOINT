@@ -27,7 +27,7 @@ public class koneksi {
     public static Connection getConnection() {
         Connection conn = null;
         try {
-            Class.forName("com.mysql.jdbc.Driver");
+            Class.forName("com.mysql.cj.jdbc.Driver");
             conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
         } catch (ClassNotFoundException e) {
             JOptionPane.showMessageDialog(null, 
