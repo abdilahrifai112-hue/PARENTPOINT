@@ -71,7 +71,7 @@ public class InputKehadiran extends JFrame {
         jPanelFilter.add(jLabelTanggal);
 
         tfTanggal.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        tfTanggal.setMargin(new java.awt.Insets(2, 100, 2, 2));
+        tfTanggal.setPreferredSize(new java.awt.Dimension(150, 35));
         jPanelFilter.add(tfTanggal);
 
         btnLoad.setContentAreaFilled(false);

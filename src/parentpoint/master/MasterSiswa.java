@@ -585,8 +585,8 @@ public class MasterSiswa extends JFrame {
         jPanelSearch.add(jLabelCari);
 
         tfCari.setFont(new java.awt.Font("Segoe UI", 0, 13)); // NOI18N
-        tfCari.setMargin(new java.awt.Insets(3, 100, 3, 10));
-        tfCari.setMinimumSize(new java.awt.Dimension(15, 30));
+        tfCari.setPreferredSize(new java.awt.Dimension(250, 35));
+        tfCari.setMinimumSize(new java.awt.Dimension(150, 35));
         tfCari.setName(""); // NOI18N
         tfCari.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
