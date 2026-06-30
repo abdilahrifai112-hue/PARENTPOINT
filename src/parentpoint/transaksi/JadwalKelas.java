@@ -11,8 +11,8 @@ import parentpoint.util.Session;
 public class JadwalKelas extends JFrame {
     private JTable table;
     private DefaultTableModel model;
-    private JComboBox<String> cbKelas, cbHari, cbMapel, cbGuru;
-    private JTextField txtJamMulai, txtJamSelesai;
+    private JComboBox<String> cbKelas, cbHari, cbMapel, cbGuru, cbSemester;
+    private JTextField txtJamMulai, txtJamSelesai, txtTahunPelajaran;
     private JButton btnSimpan, btnHapus, btnReset, btnKembali;
     private String selectedId = "";
     private boolean isAdmin;
@@ -113,6 +113,18 @@ public class JadwalKelas extends JFrame {
             gbc.gridx = 1;
             pnlForm.add(cbGuru, gbc);
 
+            gbc.gridx = 0; gbc.gridy = 6;
+            pnlForm.add(createBlueLabel("Semester:"), gbc);
+            cbSemester = new JComboBox<>(new String[]{"Ganjil", "Genap"});
+            gbc.gridx = 1;
+            pnlForm.add(cbSemester, gbc);
+
+            gbc.gridx = 0; gbc.gridy = 7;
+            pnlForm.add(createBlueLabel("Tahun Pelajaran:"), gbc);
+            txtTahunPelajaran = new JTextField(20);
+            gbc.gridx = 1;
+            pnlForm.add(txtTahunPelajaran, gbc);
+
             JPanel pnlButtons = new JPanel(new FlowLayout(FlowLayout.LEFT));
             pnlButtons.setBackground(Color.WHITE);
             btnSimpan = new JButton("Simpan");
@@ -127,7 +139,7 @@ public class JadwalKelas extends JFrame {
             pnlButtons.add(btnHapus);
             pnlButtons.add(btnReset);
 
-            gbc.gridx = 1; gbc.gridy = 6;
+            gbc.gridx = 1; gbc.gridy = 8;
             pnlForm.add(pnlButtons, gbc);
 
             pnlMain.add(pnlForm, BorderLayout.WEST);
@@ -142,7 +154,7 @@ public class JadwalKelas extends JFrame {
         pnlTable.setBackground(Color.WHITE);
         pnlTable.setBorder(BorderFactory.createLineBorder(DesignUtil.BORDER_COLOR));
 
-        model = new DefaultTableModel(new String[]{"ID", "Kelas", "Hari", "Jam", "Mata Pelajaran", "Guru"}, 0) {
+        model = new DefaultTableModel(new String[]{"ID", "Kelas", "Hari", "Jam", "Mata Pelajaran", "Guru", "Semester", "Tahun Pel."}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) { return false; }
         };
@@ -172,6 +184,9 @@ public class JadwalKelas extends JFrame {
                     cbMapel.setSelectedItem(mapel);
                     String guru = model.getValueAt(row, 5).toString();
                     cbGuru.setSelectedItem(guru);
+                    String semester = model.getValueAt(row, 6).toString();
+                    cbSemester.setSelectedItem(semester);
+                    txtTahunPelajaran.setText(model.getValueAt(row, 7).toString());
                 }
             });
         }
@@ -240,7 +255,9 @@ public class JadwalKelas extends JFrame {
                     rs.getString("hari"),
                     rs.getString("jam_mulai").substring(0, 5) + " - " + rs.getString("jam_selesai").substring(0, 5),
                     rs.getString("mata_pelajaran"),
-                    rs.getString("guru")
+                    rs.getString("guru"),
+                    rs.getString("semester") != null ? rs.getString("semester") : "-",
+                    rs.getString("tahun_pelajaran") != null ? rs.getString("tahun_pelajaran") : "-"
                 });
             }
         } catch (SQLException ex) {
@@ -250,7 +267,7 @@ public class JadwalKelas extends JFrame {
 
     private void simpanData() {
         if (cbKelas.getSelectedIndex() == -1 || txtJamMulai.getText().isEmpty() || 
-            cbMapel.getSelectedIndex() <= 0 || cbGuru.getSelectedIndex() <= 0) {
+            cbMapel.getSelectedIndex() <= 0 || cbGuru.getSelectedIndex() <= 0 || txtTahunPelajaran.getText().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Data belum lengkap!");
             return;
         }
@@ -258,9 +275,9 @@ public class JadwalKelas extends JFrame {
         int kelasId = Integer.parseInt(cbKelas.getSelectedItem().toString().split(" - ")[0]);
         String sql;
         if (selectedId.isEmpty()) {
-            sql = "INSERT INTO jadwal_kelas (kelas_id, hari, jam_mulai, jam_selesai, mata_pelajaran, guru) VALUES (?, ?, ?, ?, ?, ?)";
+            sql = "INSERT INTO jadwal_kelas (kelas_id, hari, jam_mulai, jam_selesai, mata_pelajaran, guru, semester, tahun_pelajaran) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         } else {
-            sql = "UPDATE jadwal_kelas SET kelas_id=?, hari=?, jam_mulai=?, jam_selesai=?, mata_pelajaran=?, guru=? WHERE id=?";
+            sql = "UPDATE jadwal_kelas SET kelas_id=?, hari=?, jam_mulai=?, jam_selesai=?, mata_pelajaran=?, guru=?, semester=?, tahun_pelajaran=? WHERE id=?";
         }
 
         try (Connection conn = koneksi.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -270,8 +287,10 @@ public class JadwalKelas extends JFrame {
             ps.setString(4, txtJamSelesai.getText());
             ps.setString(5, cbMapel.getSelectedItem().toString());
             ps.setString(6, cbGuru.getSelectedItem().toString());
+            ps.setString(7, cbSemester.getSelectedItem().toString());
+            ps.setString(8, txtTahunPelajaran.getText());
             if (!selectedId.isEmpty()) {
-                ps.setInt(7, Integer.parseInt(selectedId));
+                ps.setInt(9, Integer.parseInt(selectedId));
             }
             ps.executeUpdate();
             JOptionPane.showMessageDialog(this, "Data berhasil disimpan!");
@@ -306,6 +325,8 @@ public class JadwalKelas extends JFrame {
         txtJamSelesai.setText("");
         cbMapel.setSelectedIndex(0);
         cbGuru.setSelectedIndex(0);
+        cbSemester.setSelectedIndex(0);
+        txtTahunPelajaran.setText("");
         table.clearSelection();
     }
 }
