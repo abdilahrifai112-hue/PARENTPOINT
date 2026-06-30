@@ -12,6 +12,9 @@ import java.sql.Statement;
 import java.sql.SQLException;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.view.JasperViewer;
 
 import parentpoint.koneksi.koneksi;
 import java.awt.BorderLayout;
@@ -71,10 +74,6 @@ public class report extends javax.swing.JFrame {
     }
     
     private void cetakLaporan() {
-        /*
-        // KODE JASPER REPORTS (iReport)
-        // Hapus tanda komentar (slash-bintang) ini jika library iReport sudah dimasukkan ke NetBeans (Materi Pertemuan 13 & 14)
-        
         try {
             Connection conn = koneksi.getConnection();
             
@@ -90,24 +89,26 @@ public class report extends javax.swing.JFrame {
             parameters.put("p_kelas", kelas);
             parameters.put("p_cari", "%" + cari + "%");
             
-            // File .jasper hasil desain iReport (pastikan file-nya ada)
-            String path = "src/parentpoint/report/report_kehadiran.jasper";
+            // File .jasper / .jrxml hasil desain iReport (pastikan file-nya ada)
+            // Menggunakan .jrxml yang dikompilasi secara on-the-fly atau menggunakan jasper yang sudah jadi.
+            // Di sini kita asumsikan menggunakan report_kehadiran.jrxml yang dikompilasi
+            String path = "src/parentpoint/report/report_kehadiran.jrxml";
+            java.io.File f = new java.io.File(path);
+            if (!f.exists()) {
+                JOptionPane.showMessageDialog(this, "File desain report tidak ditemukan di: " + path);
+                return;
+            }
             
-            // Untuk file JRXML, gunakan kompilasi: 
-            // net.sf.jasperreports.engine.design.JasperDesign jd = net.sf.jasperreports.engine.xml.JRXmlLoader.load("src/.../report_kehadiran.jrxml");
-            // net.sf.jasperreports.engine.JasperReport jr = net.sf.jasperreports.engine.JasperCompileManager.compileReport(jd);
-            // net.sf.jasperreports.engine.JasperPrint jp = net.sf.jasperreports.engine.JasperFillManager.fillReport(jr, parameters, conn);
+            net.sf.jasperreports.engine.design.JasperDesign jd = net.sf.jasperreports.engine.xml.JRXmlLoader.load(path);
+            net.sf.jasperreports.engine.JasperReport jr = net.sf.jasperreports.engine.JasperCompileManager.compileReport(jd);
+            JasperPrint jp = JasperFillManager.fillReport(jr, parameters, conn);
             
-            // Atau untuk file .jasper:
-            net.sf.jasperreports.engine.JasperPrint jp = net.sf.jasperreports.engine.JasperFillManager.fillReport(path, parameters, conn);
-            
-            net.sf.jasperreports.view.JasperViewer.viewReport(jp, false);
+            JasperViewer.viewReport(jp, false);
             
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Gagal mencetak laporan: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Gagal mencetak laporan: " + e.getMessage(), "Error Cetak", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
-        */
-        JOptionPane.showMessageDialog(this, "Fitur Cetak dengan iReport sudah disiapkan di Source Code.\nSilakan un-comment kode di report.java setelah memasukkan Library JasperReports ke project NetBeans.");
     }
     
     private void loadKelas() {
