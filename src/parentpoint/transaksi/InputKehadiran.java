@@ -35,7 +35,7 @@ public class InputKehadiran extends JFrame {
         this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         styleComponents();
         loadKelas();
-        tfTanggal.setText(new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+        tfTanggal.setDate(new Date());
     }
 
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -45,7 +45,8 @@ public class InputKehadiran extends JFrame {
         jLabelKelas = new javax.swing.JLabel();
         cbKelas = new javax.swing.JComboBox<>();
         jLabelTanggal = new javax.swing.JLabel();
-        tfTanggal = new javax.swing.JTextField();
+        tfTanggal = new com.toedter.calendar.JDateChooser();
+        tfTanggal.setDateFormatString("yyyy-MM-dd");
         btnLoad = new javax.swing.JButton();
         btnHadirSemua = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -191,7 +192,7 @@ public class InputKehadiran extends JFrame {
         String sel = (String) cbKelas.getSelectedItem();
         if (sel == null) return;
         int kelasId = Integer.parseInt(sel.split(" - ")[0].trim());
-        String tanggal = tfTanggal.getText().trim();
+        String tanggal = tfTanggal.getDate() != null ? new SimpleDateFormat("yyyy-MM-dd").format(tfTanggal.getDate()) : "";
 
         if (tanggal.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Tanggal harus diisi!", "Peringatan", JOptionPane.WARNING_MESSAGE);
@@ -243,7 +244,7 @@ public class InputKehadiran extends JFrame {
 
         if (jTable1.isEditing()) jTable1.getCellEditor().stopCellEditing();
 
-        String tanggal = tfTanggal.getText().trim();
+        String tanggal = tfTanggal.getDate() != null ? new SimpleDateFormat("yyyy-MM-dd").format(tfTanggal.getDate()) : "";
         Connection conn = koneksi.getConnection();
         if (conn != null) {
             try {
@@ -426,7 +427,7 @@ public class InputKehadiran extends JFrame {
     private javax.swing.JPanel jPanelFilter;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable jTable1;
-    private javax.swing.JTextField tfTanggal;
+    private com.toedter.calendar.JDateChooser tfTanggal;
     // End of variables declaration//GEN-END:variables
 }
 
