@@ -12,6 +12,7 @@ import java.sql.Statement;
 import java.sql.SQLException;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
+
 import parentpoint.koneksi.koneksi;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -23,6 +24,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import parentpoint.util.DesignUtil;
+import com.toedter.calendar.JDateChooser;
+import java.text.SimpleDateFormat;
 
 /**
  *
@@ -39,9 +42,9 @@ public class report extends javax.swing.JFrame {
         // Load data kelas ke ComboBox
         loadKelas();
         
-        // Set placeholder untuk tanggal
-        jTextField1.setText("2026-06-16");
-        jTextField2.setText("2026-06-18");
+        // Set placeholder untuk tanggal (dihapus karena JDateChooser)
+        dateDari.setDate(new java.util.Date());
+        dateSampai.setDate(new java.util.Date());
         
         // Action tombol Tampilkan
         jButton1.addActionListener(new java.awt.event.ActionListener() {
@@ -56,7 +59,55 @@ public class report extends javax.swing.JFrame {
                 resetForm();
             }
         });
+        
+        // Action tombol Cetak
+        btnCetak.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cetakLaporan();
+            }
+        });
+        
         styleComponents();
+    }
+    
+    private void cetakLaporan() {
+        /*
+        // KODE JASPER REPORTS (iReport)
+        // Hapus tanda komentar (slash-bintang) ini jika library iReport sudah dimasukkan ke NetBeans (Materi Pertemuan 13 & 14)
+        
+        try {
+            Connection conn = koneksi.getConnection();
+            
+            // Mengambil parameter dari UI
+            String kelas = (String) jComboBox1.getSelectedItem();
+            String dariTanggal = new SimpleDateFormat("yyyy-MM-dd").format(dateDari.getDate());
+            String sampaiTanggal = new SimpleDateFormat("yyyy-MM-dd").format(dateSampai.getDate());
+            String cari = txtCari.getText().trim();
+            
+            java.util.HashMap<String, Object> parameters = new java.util.HashMap<>();
+            parameters.put("p_dari", dariTanggal);
+            parameters.put("p_sampai", sampaiTanggal);
+            parameters.put("p_kelas", kelas);
+            parameters.put("p_cari", "%" + cari + "%");
+            
+            // File .jasper hasil desain iReport (pastikan file-nya ada)
+            String path = "src/parentpoint/report/report_kehadiran.jasper";
+            
+            // Untuk file JRXML, gunakan kompilasi: 
+            // net.sf.jasperreports.engine.design.JasperDesign jd = net.sf.jasperreports.engine.xml.JRXmlLoader.load("src/.../report_kehadiran.jrxml");
+            // net.sf.jasperreports.engine.JasperReport jr = net.sf.jasperreports.engine.JasperCompileManager.compileReport(jd);
+            // net.sf.jasperreports.engine.JasperPrint jp = net.sf.jasperreports.engine.JasperFillManager.fillReport(jr, parameters, conn);
+            
+            // Atau untuk file .jasper:
+            net.sf.jasperreports.engine.JasperPrint jp = net.sf.jasperreports.engine.JasperFillManager.fillReport(path, parameters, conn);
+            
+            net.sf.jasperreports.view.JasperViewer.viewReport(jp, false);
+            
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Gagal mencetak laporan: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        */
+        JOptionPane.showMessageDialog(this, "Fitur Cetak dengan iReport sudah disiapkan di Source Code.\nSilakan un-comment kode di report.java setelah memasukkan Library JasperReports ke project NetBeans.");
     }
     
     private void loadKelas() {
@@ -82,14 +133,16 @@ public class report extends javax.swing.JFrame {
     
     private void tampilkanLaporan() {
         String kelas = (String) jComboBox1.getSelectedItem();
-        String dariTanggal = jTextField1.getText().trim();
-        String sampaiTanggal = jTextField2.getText().trim();
+        String cari = txtCari.getText().trim();
         
-        if (dariTanggal.isEmpty() || sampaiTanggal.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Tanggal harus diisi! Format: yyyy-MM-dd", 
+        if (dateDari.getDate() == null || dateSampai.getDate() == null) {
+            JOptionPane.showMessageDialog(this, "Tanggal harus dipilih!", 
                 "Peringatan", JOptionPane.WARNING_MESSAGE);
             return;
         }
+        
+        String dariTanggal = new SimpleDateFormat("yyyy-MM-dd").format(dateDari.getDate());
+        String sampaiTanggal = new SimpleDateFormat("yyyy-MM-dd").format(dateSampai.getDate());
         
         Connection conn = koneksi.getConnection();
         if (conn != null) {
@@ -104,13 +157,20 @@ public class report extends javax.swing.JFrame {
                 if (kelas != null && !kelas.equals("Semua Kelas")) {
                     sql += "AND k.nama_kelas = ? ";
                 }
+                if (!cari.isEmpty()) {
+                    sql += "AND s.nama LIKE ? ";
+                }
                 sql += "ORDER BY h.tanggal, s.nama";
                 
                 PreparedStatement ps = conn.prepareStatement(sql);
                 ps.setString(1, dariTanggal);
                 ps.setString(2, sampaiTanggal);
+                int pIndex = 3;
                 if (kelas != null && !kelas.equals("Semua Kelas")) {
-                    ps.setString(3, kelas);
+                    ps.setString(pIndex++, kelas);
+                }
+                if (!cari.isEmpty()) {
+                    ps.setString(pIndex++, "%" + cari + "%");
                 }
                 
                 ResultSet rs = ps.executeQuery();
@@ -169,8 +229,9 @@ public class report extends javax.swing.JFrame {
     
     private void resetForm() {
         jComboBox1.setSelectedIndex(0);
-        jTextField1.setText("");
-        jTextField2.setText("");
+        dateDari.setDate(new java.util.Date());
+        dateSampai.setDate(new java.util.Date());
+        txtCari.setText("");
         jLabel5.setText("0");
         jLabel7.setText("0");
         jLabel9.setText("0");
@@ -194,12 +255,15 @@ public class report extends javax.swing.JFrame {
         jPanel3 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jComboBox1 = new javax.swing.JComboBox<>();
+        jLabel12 = new javax.swing.JLabel();
+        txtCari = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
-        jTextField1 = new javax.swing.JTextField();
+        dateDari = new com.toedter.calendar.JDateChooser();
         jLabel3 = new javax.swing.JLabel();
-        jTextField2 = new javax.swing.JTextField();
+        dateSampai = new com.toedter.calendar.JDateChooser();
         jButton1 = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
+        btnCetak = new javax.swing.JButton();
         jPanel4 = new javax.swing.JPanel();
         jPanelCardHadirBar = new javax.swing.JPanel();
         jPanelCardHadirContent = new javax.swing.JPanel();
@@ -278,48 +342,66 @@ public class report extends javax.swing.JFrame {
         jComboBox1.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         jComboBox1.setPreferredSize(new java.awt.Dimension(100, 50));
 
-        jLabel2.setText("Dari Tanggal :");
-        jLabel2.setPreferredSize(new java.awt.Dimension(100, 50));
+        jLabel12.setText("Cari Siswa :");
+        jLabel12.setPreferredSize(new java.awt.Dimension(80, 50));
 
-        jTextField1.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
-        jTextField1.setPreferredSize(new java.awt.Dimension(100, 50));
+        txtCari.setPreferredSize(new java.awt.Dimension(120, 50));
+
+        jLabel2.setText("Dari Tanggal :");
+        jLabel2.setPreferredSize(new java.awt.Dimension(80, 50));
+
+        dateDari.setPreferredSize(new java.awt.Dimension(120, 50));
+        dateDari.setDateFormatString("yyyy-MM-dd");
 
         jLabel3.setText("Sampai :");
-        jLabel3.setPreferredSize(new java.awt.Dimension(100, 50));
+        jLabel3.setPreferredSize(new java.awt.Dimension(60, 50));
 
-        jTextField2.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
-        jTextField2.setPreferredSize(new java.awt.Dimension(100, 50));
+        dateSampai.setPreferredSize(new java.awt.Dimension(120, 50));
+        dateSampai.setDateFormatString("yyyy-MM-dd");
 
         jButton1.setBackground(new java.awt.Color(25, 55, 109));
         jButton1.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
         jButton1.setForeground(new java.awt.Color(255, 255, 255));
         jButton1.setText("Tampilkan");
         jButton1.setPreferredSize(new java.awt.Dimension(110, 35));
+        
         jButton2.setBackground(new java.awt.Color(230, 126, 34));
         jButton2.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
         jButton2.setForeground(new java.awt.Color(255, 255, 255));
         jButton2.setText("Reset");
         jButton2.setPreferredSize(new java.awt.Dimension(90, 35));
+
+        btnCetak.setBackground(new java.awt.Color(46, 204, 113));
+        btnCetak.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
+        btnCetak.setForeground(new java.awt.Color(255, 255, 255));
+        btnCetak.setText("Cetak (iReport)");
+        btnCetak.setPreferredSize(new java.awt.Dimension(130, 35));
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
+                .addGap(5, 5, 5)
                 .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(15, 15, 15)
+                .addGap(10, 10, 10)
+                .addComponent(jLabel12, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(5, 5, 5)
+                .addComponent(txtCari, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(10, 10, 10)
                 .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(15, 15, 15)
+                .addGap(5, 5, 5)
+                .addComponent(dateDari, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(10, 10, 10)
                 .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(15, 15, 15)
-                .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(5, 5, 5)
+                .addComponent(dateSampai, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(15, 15, 15)
                 .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
+                .addGap(10, 10, 10)
                 .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(10, 10, 10)
+                .addComponent(btnCetak, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
@@ -329,12 +411,15 @@ public class report extends javax.swing.JFrame {
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel12, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtCari, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(dateDari, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(dateSampai, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnCetak, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -578,24 +663,27 @@ public class report extends javax.swing.JFrame {
         jLabel3.setForeground(DesignUtil.TEXT_PRIMARY);
         jLabel3.setText("Sampai:");
         
+        jLabel12.setFont(DesignUtil.FONT_BODY_BOLD);
+        jLabel12.setForeground(DesignUtil.TEXT_PRIMARY);
+        jLabel12.setText("Cari Siswa:");
+        
         // Style textfields and combobox
         jComboBox1.setFont(DesignUtil.FONT_BODY);
         jComboBox1.setBackground(Color.WHITE);
-        jComboBox1.setPreferredSize(new java.awt.Dimension(140, 35));
+        jComboBox1.setPreferredSize(new java.awt.Dimension(120, 35));
         
-        jTextField1.setFont(DesignUtil.FONT_BODY);
-        jTextField1.setBorder(BorderFactory.createCompoundBorder(
+        txtCari.setFont(DesignUtil.FONT_BODY);
+        txtCari.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(DesignUtil.BORDER_COLOR),
             BorderFactory.createEmptyBorder(5, 10, 5, 10)
         ));
-        jTextField1.setPreferredSize(new java.awt.Dimension(120, 35));
+        txtCari.setPreferredSize(new java.awt.Dimension(120, 35));
         
-        jTextField2.setFont(DesignUtil.FONT_BODY);
-        jTextField2.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(DesignUtil.BORDER_COLOR),
-            BorderFactory.createEmptyBorder(5, 10, 5, 10)
-        ));
-        jTextField2.setPreferredSize(new java.awt.Dimension(120, 35));
+        dateDari.setFont(DesignUtil.FONT_BODY);
+        dateDari.setPreferredSize(new java.awt.Dimension(120, 35));
+        
+        dateSampai.setFont(DesignUtil.FONT_BODY);
+        dateSampai.setPreferredSize(new java.awt.Dimension(120, 35));
         
         // Buttons
         jButton1.setUI(new javax.swing.plaf.basic.BasicButtonUI());
@@ -626,6 +714,20 @@ public class report extends javax.swing.JFrame {
         jButton2.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent e) { jButton2.setBackground(DesignUtil.WARNING.darker()); }
             public void mouseExited(java.awt.event.MouseEvent e) { jButton2.setBackground(DesignUtil.WARNING); }
+        });
+        
+        btnCetak.setUI(new javax.swing.plaf.basic.BasicButtonUI());
+        btnCetak.setFont(DesignUtil.FONT_BUTTON);
+        btnCetak.setBackground(new Color(46, 204, 113));
+        btnCetak.setForeground(Color.WHITE);
+        btnCetak.setFocusPainted(false);
+        btnCetak.setBorderPainted(false);
+        btnCetak.setOpaque(true);
+        btnCetak.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnCetak.setPreferredSize(new java.awt.Dimension(130, 35));
+        btnCetak.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent e) { btnCetak.setBackground(new Color(39, 174, 96)); }
+            public void mouseExited(java.awt.event.MouseEvent e) { btnCetak.setBackground(new Color(46, 204, 113)); }
         });
         
         // Cards styling (jPanel4, jPanel5, jPanel6, jPanel7)
@@ -751,6 +853,7 @@ public class report extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnCetak;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JComboBox<String> jComboBox1;
@@ -758,6 +861,7 @@ public class report extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
+    private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -784,9 +888,9 @@ public class report extends javax.swing.JFrame {
     private javax.swing.JRadioButtonMenuItem jRadioButtonMenuItem1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTable jTable1;
-    private javax.swing.JTextField jTextField1;
-    private javax.swing.JTextField jTextField2;
+    private com.toedter.calendar.JDateChooser dateDari;
+    private com.toedter.calendar.JDateChooser dateSampai;
+    private javax.swing.JTextField txtCari;
     private javax.swing.JLabel lblHeader;
     // End of variables declaration//GEN-END:variables
 }
-
