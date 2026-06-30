@@ -11,8 +11,8 @@ import parentpoint.util.Session;
 public class JadwalKelas extends JFrame {
     private JTable table;
     private DefaultTableModel model;
-    private JComboBox<String> cbKelas, cbHari;
-    private JTextField txtJamMulai, txtJamSelesai, txtMapel, txtGuru;
+    private JComboBox<String> cbKelas, cbHari, cbMapel, cbGuru;
+    private JTextField txtJamMulai, txtJamSelesai;
     private JButton btnSimpan, btnHapus, btnReset, btnKembali;
     private String selectedId = "";
     private boolean isAdmin;
@@ -101,15 +101,17 @@ public class JadwalKelas extends JFrame {
 
             gbc.gridx = 0; gbc.gridy = 4;
             pnlForm.add(createBlueLabel("Nama Mata Pelajaran:"), gbc);
-            txtMapel = new JTextField(20);
+            cbMapel = new JComboBox<>();
+            loadComboBoxMapel();
             gbc.gridx = 1;
-            pnlForm.add(txtMapel, gbc);
+            pnlForm.add(cbMapel, gbc);
 
             gbc.gridx = 0; gbc.gridy = 5;
             pnlForm.add(createBlueLabel("Nama Guru Pengajar:"), gbc);
-            txtGuru = new JTextField(20);
+            cbGuru = new JComboBox<>();
+            loadComboBoxGuru();
             gbc.gridx = 1;
-            pnlForm.add(txtGuru, gbc);
+            pnlForm.add(cbGuru, gbc);
 
             JPanel pnlButtons = new JPanel(new FlowLayout(FlowLayout.LEFT));
             pnlButtons.setBackground(Color.WHITE);
@@ -166,8 +168,10 @@ public class JadwalKelas extends JFrame {
                         txtJamMulai.setText(jams[0]);
                         txtJamSelesai.setText(jams[1]);
                     }
-                    txtMapel.setText(model.getValueAt(row, 4).toString());
-                    txtGuru.setText(model.getValueAt(row, 5).toString());
+                    String mapel = model.getValueAt(row, 4).toString();
+                    cbMapel.setSelectedItem(mapel);
+                    String guru = model.getValueAt(row, 5).toString();
+                    cbGuru.setSelectedItem(guru);
                 }
             });
         }
@@ -183,6 +187,30 @@ public class JadwalKelas extends JFrame {
             ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM kelas");
             while (rs.next()) {
                 cbKelas.addItem(rs.getInt("id") + " - " + rs.getString("nama_kelas"));
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void loadComboBoxMapel() {
+        cbMapel.addItem("- Pilih Mata Pelajaran -");
+        try (Connection conn = koneksi.getConnection()) {
+            ResultSet rs = conn.createStatement().executeQuery("SELECT nama_mapel FROM mata_pelajaran ORDER BY nama_mapel");
+            while (rs.next()) {
+                cbMapel.addItem(rs.getString("nama_mapel"));
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void loadComboBoxGuru() {
+        cbGuru.addItem("- Pilih Guru -");
+        try (Connection conn = koneksi.getConnection()) {
+            ResultSet rs = conn.createStatement().executeQuery("SELECT nama_guru FROM guru ORDER BY nama_guru");
+            while (rs.next()) {
+                cbGuru.addItem(rs.getString("nama_guru"));
             }
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -221,7 +249,8 @@ public class JadwalKelas extends JFrame {
     }
 
     private void simpanData() {
-        if (cbKelas.getSelectedIndex() == -1 || txtJamMulai.getText().isEmpty() || txtMapel.getText().isEmpty()) {
+        if (cbKelas.getSelectedIndex() == -1 || txtJamMulai.getText().isEmpty() || 
+            cbMapel.getSelectedIndex() <= 0 || cbGuru.getSelectedIndex() <= 0) {
             JOptionPane.showMessageDialog(this, "Data belum lengkap!");
             return;
         }
@@ -239,8 +268,8 @@ public class JadwalKelas extends JFrame {
             ps.setString(2, cbHari.getSelectedItem().toString());
             ps.setString(3, txtJamMulai.getText());
             ps.setString(4, txtJamSelesai.getText());
-            ps.setString(5, txtMapel.getText());
-            ps.setString(6, txtGuru.getText());
+            ps.setString(5, cbMapel.getSelectedItem().toString());
+            ps.setString(6, cbGuru.getSelectedItem().toString());
             if (!selectedId.isEmpty()) {
                 ps.setInt(7, Integer.parseInt(selectedId));
             }
@@ -275,8 +304,8 @@ public class JadwalKelas extends JFrame {
         cbHari.setSelectedIndex(0);
         txtJamMulai.setText("");
         txtJamSelesai.setText("");
-        txtMapel.setText("");
-        txtGuru.setText("");
+        cbMapel.setSelectedIndex(0);
+        cbGuru.setSelectedIndex(0);
         table.clearSelection();
     }
 }

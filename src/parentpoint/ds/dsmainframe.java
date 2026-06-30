@@ -113,11 +113,13 @@ public class dsmainframe extends javax.swing.JFrame {
         lblRole.setText("Role: Admin");
         
         // Sidebar Buttons styling
-        JButton[] sidebarButtons = {jButton1, jButton2, jButton3, jButton4, jButton5, jButton6, jButton7, jButton9, jButton10, jButton11, jButton12};
+        JButton btnMasterMapel = new JButton();
+        JButton btnMasterGuru = new JButton();
+        JButton[] sidebarButtons = {jButton1, jButton2, jButton3, jButton4, btnMasterMapel, btnMasterGuru, jButton5, jButton6, jButton7, jButton9, jButton10, jButton11, jButton12};
         // Clean, cross-platform Unicode geometric icons:
         // U+25C6 is Black Diamond (◆) for active item, U+25CB is White Circle (○) for inactive items
-        String[] icons = {"\u25c6  ", "\u25cb  ", "\u25cb  ", "\u25cb  ", "\u25cb  ", "\u25cb  ", "\u25cb  ", "\u25cb  ", "\u25cb  ", "\u25cb  ", "\u25cb  "};
-        String[] labels = {"Dashboard", "Data Siswa", "Data Orang Tua", "Data Kelas", "Input Kehadiran", "Rekap Bulanan", "Manajemen User", "Lap. Kehadiran", "Rekap Per Siswa", "Rekap Per Kelas", "Siswa Sering Absen"};
+        String[] icons = {"\u25c6  ", "\u25cb  ", "\u25cb  ", "\u25cb  ", "\u25cb  ", "\u25cb  ", "\u25cb  ", "\u25cb  ", "\u25cb  ", "\u25cb  ", "\u25cb  ", "\u25cb  ", "\u25cb  "};
+        String[] labels = {"Dashboard", "Data Siswa", "Data Orang Tua", "Data Kelas", "Data Mata Pelajaran", "Data Guru", "Input Kehadiran", "Rekap Bulanan", "Manajemen User", "Lap. Kehadiran", "Rekap Per Siswa", "Rekap Per Kelas", "Siswa Sering Absen"};
         
         for (int i = 0; i < sidebarButtons.length; i++) {
             JButton btn = sidebarButtons[i];
@@ -304,6 +306,8 @@ public class dsmainframe extends javax.swing.JFrame {
         jButton2.addActionListener(e -> new parentpoint.master.MasterSiswa().setVisible(true));
         jButton3.addActionListener(e -> new parentpoint.master.MasterOrangTua().setVisible(true));
         jButton4.addActionListener(e -> new parentpoint.master.MasterKelas().setVisible(true));
+        btnMasterMapel.addActionListener(e -> new parentpoint.master.MasterMapel().setVisible(true));
+        btnMasterGuru.addActionListener(e -> new parentpoint.master.MasterGuru().setVisible(true));
         jButton5.addActionListener(e -> new parentpoint.transaksi.InputKehadiran().setVisible(true));
         jButton6.addActionListener(e -> new parentpoint.transaksi.RekapBulanan().setVisible(true));
         jButton7.addActionListener(e -> new parentpoint.master.MasterUser().setVisible(true));
@@ -312,6 +316,11 @@ public class dsmainframe extends javax.swing.JFrame {
         jButton10.addActionListener(e -> new parentpoint.report.ReportRekapSiswa().setVisible(true));
         jButton11.addActionListener(e -> new parentpoint.report.ReportRekapKelas().setVisible(true));
         jButton12.addActionListener(e -> new parentpoint.report.ReportAlpha().setVisible(true));
+        
+        jPanelSidebarMenu.add(btnMasterMapel, 4);
+        jPanelSidebarMenu.add(btnMasterGuru, 5);
+        jPanelSidebarMenu.revalidate();
+        jPanelSidebarMenu.repaint();
 // setSize removed for responsiveness
         setLocationRelativeTo(null);
     }
