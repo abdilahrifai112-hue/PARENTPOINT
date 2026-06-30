@@ -12,9 +12,6 @@ import java.sql.Statement;
 import java.sql.SQLException;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
-import net.sf.jasperreports.engine.JasperFillManager;
-import net.sf.jasperreports.engine.JasperPrint;
-import net.sf.jasperreports.view.JasperViewer;
 
 import parentpoint.koneksi.koneksi;
 import java.awt.BorderLayout;
@@ -75,7 +72,7 @@ public class report extends javax.swing.JFrame {
     
     private void cetakLaporan() {
         try {
-            Connection conn = koneksi.getConnection();
+            java.sql.Connection conn = koneksi.getConnection();
             
             // Mengambil parameter dari UI
             String kelas = (String) jComboBox1.getSelectedItem();
@@ -89,22 +86,33 @@ public class report extends javax.swing.JFrame {
             parameters.put("p_kelas", kelas);
             parameters.put("p_cari", "%" + cari + "%");
             
-            // File .jasper / .jrxml hasil desain iReport (pastikan file-nya ada)
-            // Menggunakan .jrxml yang dikompilasi secara on-the-fly atau menggunakan jasper yang sudah jadi.
-            // Di sini kita asumsikan menggunakan report_kehadiran.jrxml yang dikompilasi
             String path = "src/parentpoint/report/report_kehadiran.jrxml";
             java.io.File f = new java.io.File(path);
             if (!f.exists()) {
-                JOptionPane.showMessageDialog(this, "File desain report tidak ditemukan di: " + path);
+                JOptionPane.showMessageDialog(this, "File desain report tidak ditemukan di:\n" + f.getAbsolutePath());
                 return;
             }
             
-            net.sf.jasperreports.engine.design.JasperDesign jd = net.sf.jasperreports.engine.xml.JRXmlLoader.load(path);
-            net.sf.jasperreports.engine.JasperReport jr = net.sf.jasperreports.engine.JasperCompileManager.compileReport(jd);
-            JasperPrint jp = JasperFillManager.fillReport(jr, parameters, conn);
+            // Menggunakan Java Reflection agar source code tetap bisa dikompilasi 
+            // walaupun library Jasper belum ada di folder lib/
+            Class<?> jrXmlLoaderClass = Class.forName("net.sf.jasperreports.engine.xml.JRXmlLoader");
+            java.lang.reflect.Method loadMethod = jrXmlLoaderClass.getMethod("load", String.class);
+            Object jasperDesign = loadMethod.invoke(null, path);
             
-            JasperViewer.viewReport(jp, false);
+            Class<?> compileManagerClass = Class.forName("net.sf.jasperreports.engine.JasperCompileManager");
+            java.lang.reflect.Method compileMethod = compileManagerClass.getMethod("compileReport", Class.forName("net.sf.jasperreports.engine.design.JasperDesign"));
+            Object jasperReport = compileMethod.invoke(null, jasperDesign);
             
+            Class<?> fillManagerClass = Class.forName("net.sf.jasperreports.engine.JasperFillManager");
+            java.lang.reflect.Method fillMethod = fillManagerClass.getMethod("fillReport", Class.forName("net.sf.jasperreports.engine.JasperReport"), java.util.Map.class, java.sql.Connection.class);
+            Object jasperPrint = fillMethod.invoke(null, jasperReport, parameters, conn);
+            
+            Class<?> viewerClass = Class.forName("net.sf.jasperreports.view.JasperViewer");
+            java.lang.reflect.Method viewMethod = viewerClass.getMethod("viewReport", Class.forName("net.sf.jasperreports.engine.JasperPrint"), boolean.class);
+            viewMethod.invoke(null, jasperPrint, false);
+            
+        } catch (ClassNotFoundException e) {
+            JOptionPane.showMessageDialog(this, "Library JasperReports (iReport) belum dimasukkan ke dalam project!\nSilakan jalankan aplikasi dari dalam NetBeans jika library sudah ditambahkan.", "Library Tidak Ditemukan", JOptionPane.WARNING_MESSAGE);
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Gagal mencetak laporan: " + e.getMessage(), "Error Cetak", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
