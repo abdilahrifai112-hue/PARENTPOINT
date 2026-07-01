@@ -33,6 +33,14 @@ public class dsmainframe extends javax.swing.JFrame {
         this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         styleComponents();
         loadDashboardData();
+        
+        // Tambahkan listener untuk refresh otomatis saat dashboard kembali difokuskan
+        this.addWindowFocusListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowGainedFocus(java.awt.event.WindowEvent e) {
+                loadDashboardData();
+            }
+        });
     }
 
     private void styleComponents() {
