@@ -59,8 +59,7 @@ public class LOGIN extends JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("PARENT POINT - Login");
-        setResizable(true); // biarkan window bisa diresize
-        setMinimumSize(new java.awt.Dimension(700, 450)); // minimal ukuran
+        setResizable(false);
         getContentPane().setLayout(new java.awt.GridLayout(1, 2));
 
         jPanelLeft.setBackground(new java.awt.Color(25, 55, 109));
@@ -70,11 +69,7 @@ public class LOGIN extends JFrame {
         lblIcon.setForeground(new java.awt.Color(255, 255, 255));
         lblIcon.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lblIcon.setText("🎓");
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.insets = new java.awt.Insets(0, 0, 15, 0);
-        jPanelLeft.add(lblIcon, gridBagConstraints);
+        jPanelLeft.add(lblIcon, new java.awt.GridBagConstraints());
 
         lblBrand.setFont(new java.awt.Font("Segoe UI", 1, 32)); // NOI18N
         lblBrand.setForeground(new java.awt.Color(255, 255, 255));
@@ -188,6 +183,8 @@ public class LOGIN extends JFrame {
         gridBagConstraints.insets = new java.awt.Insets(0, 40, 20, 40);
         jPanelRight.add(jCheckBox1, gridBagConstraints);
 
+        jButton1.setContentAreaFilled(false);
+        jButton1.setOpaque(true);
         jButton1.setBackground(new java.awt.Color(25, 55, 109));
         jButton1.setFont(new java.awt.Font("Segoe UI", 1, 15)); // NOI18N
         jButton1.setForeground(new java.awt.Color(255, 255, 255));
@@ -205,26 +202,6 @@ public class LOGIN extends JFrame {
         gridBagConstraints.weightx = 1.0;
         gridBagConstraints.insets = new java.awt.Insets(0, 40, 0, 40);
         jPanelRight.add(jButton1, gridBagConstraints);
-
-        javax.swing.JButton btnDaftar = new javax.swing.JButton("Belum punya akun? Daftar");
-        btnDaftar.setBackground(new java.awt.Color(255, 255, 255));
-        btnDaftar.setFont(new java.awt.Font("Segoe UI", 1, 14));
-        btnDaftar.setForeground(new java.awt.Color(41, 128, 185)); // DesignUtil.ACCENT
-        btnDaftar.setBorderPainted(false);
-        btnDaftar.setFocusPainted(false);
-        btnDaftar.setContentAreaFilled(false);
-        btnDaftar.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        btnDaftar.addActionListener(e -> {
-            new Register().setVisible(true);
-            dispose();
-        });
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 8;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.insets = new java.awt.Insets(15, 40, 0, 40);
-        jPanelRight.add(btnDaftar, gridBagConstraints);
 
         getContentPane().add(jPanelRight);
 
@@ -322,6 +299,29 @@ public class LOGIN extends JFrame {
                 jButton1.setBackground(new Color(25, 55, 109));
             }
         });
+        
+        // --- Add Register Link Dynamically ---
+        javax.swing.JLabel lblRegister = new javax.swing.JLabel("<html>Belum punya akun? <font color='#3498db'><b>Daftar di sini</b></font></html>");
+        lblRegister.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 13));
+        lblRegister.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        lblRegister.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        
+        lblRegister.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                new parentpoint.LOGIN.Register().setVisible(true);
+                dispose(); // Tutup form login
+            }
+        });
+        
+        java.awt.GridBagConstraints gc = new java.awt.GridBagConstraints();
+        gc.gridx = 0;
+        gc.gridy = 8;
+        gc.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gc.insets = new java.awt.Insets(15, 40, 0, 40);
+        jPanelRight.add(lblRegister, gc);
+        jPanelRight.revalidate();
+        jPanelRight.repaint();
+        // -------------------------------------
         
         // Premium borders for textfields
         jTextField1.setBorder(BorderFactory.createCompoundBorder(
