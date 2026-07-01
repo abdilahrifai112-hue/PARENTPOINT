@@ -142,6 +142,17 @@ public class MasterGuru extends JFrame {
         jPanelHeader.add(btnKembali, java.awt.BorderLayout.EAST);
         jPanelHeader.revalidate();
         jPanelHeader.repaint();
+        
+        if ("guru".equalsIgnoreCase(parentpoint.util.Session.getRole())) {
+            jLabelTitle.setText("PROFIL SAYA");
+            jScrollPane1.setVisible(false);
+            jPanelButtons.setVisible(false);
+            tfNamaGuru.setEditable(false);
+            tfNip.setEditable(false);
+            
+            // To make it look like a nice profile page, remove table and form, and re-add them nicely
+            jPanelMain.remove(jScrollPane1);
+        }
     }
 
     private void loadData() {
@@ -151,14 +162,23 @@ public class MasterGuru extends JFrame {
                 DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
                 model.setRowCount(0);
                 Statement st = conn.createStatement();
-                ResultSet rs = st.executeQuery(
-                    "SELECT id, nama_guru, nip, 0 AS jml FROM guru ORDER BY nama_guru");
+                String sql = "SELECT id, nama_guru, nip, 0 AS jml FROM guru ";
+                if ("guru".equalsIgnoreCase(parentpoint.util.Session.getRole())) {
+                    sql += " WHERE nama_guru = '" + parentpoint.util.Session.getGuruNama() + "'";
+                }
+                sql += " ORDER BY nama_guru";
+                ResultSet rs = st.executeQuery(sql);
                 while (rs.next()) {
                     model.addRow(new Object[]{
                         rs.getInt("id"), rs.getString("nama_guru"),
                         rs.getString("nip"), rs.getInt("jml")
                     });
                 }
+                
+                if ("guru".equalsIgnoreCase(parentpoint.util.Session.getRole()) && model.getRowCount() > 0) {
+                    jTable1.setRowSelectionInterval(0, 0);
+                }
+                
                 rs.close(); st.close(); conn.close();
             } catch (SQLException e) {
                 JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
