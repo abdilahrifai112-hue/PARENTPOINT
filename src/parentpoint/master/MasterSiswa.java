@@ -33,6 +33,9 @@ public class MasterSiswa extends JFrame {
     }
 
     private void styleComponents() {
+        if (tfCari != null) {
+            tfCari.setPreferredSize(new java.awt.Dimension(250, 30));
+        }
         this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         setTitle("PARENT POINT - Master Data Siswa");
         setLocationRelativeTo(null);
@@ -409,24 +412,6 @@ public class MasterSiswa extends JFrame {
         jScrollPane1 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-
-            },
-            new String [] {
-                "ID", "NIS", "Nama", "Kelas", "JK", "Alamat"
-            }
-        ) {
-            boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false
-            };
-
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
-            }
-        });
-        jScrollPane1.setViewportView(jTable1);
-
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("PARENT POINT - Master Data Siswa");
 
@@ -547,7 +532,6 @@ public class MasterSiswa extends JFrame {
         btnHapus.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
         btnHapus.setForeground(new java.awt.Color(255, 255, 255));
         btnHapus.setText("Hapus");
-        btnHapus.setActionCommand("Hapus");
         btnHapus.setContentAreaFilled(false);
         btnHapus.setOpaque(true);
         btnHapus.addActionListener(new java.awt.event.ActionListener() {
@@ -585,8 +569,8 @@ public class MasterSiswa extends JFrame {
         jPanelSearch.add(jLabelCari);
 
         tfCari.setFont(new java.awt.Font("Segoe UI", 0, 13)); // NOI18N
-        tfCari.setPreferredSize(new java.awt.Dimension(250, 35));
-        tfCari.setMinimumSize(new java.awt.Dimension(150, 35));
+        tfCari.setMargin(new java.awt.Insets(3, 100, 3, 10));
+        tfCari.setMinimumSize(new java.awt.Dimension(15, 30));
         tfCari.setName(""); // NOI18N
         tfCari.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -609,6 +593,25 @@ public class MasterSiswa extends JFrame {
         jPanelSearch.add(btnCari);
 
         jPanelTable.add(jPanelSearch, java.awt.BorderLayout.NORTH);
+
+        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "ID", "NIS", "Nama", "Kelas", "JK", "Alamat"
+            }
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPane1.setViewportView(jTable1);
+
         jPanelTable.add(jScrollPane1, java.awt.BorderLayout.CENTER);
 
         jPanelMain.add(jPanelTable, java.awt.BorderLayout.CENTER);
