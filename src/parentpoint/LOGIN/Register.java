@@ -128,7 +128,7 @@ public class Register extends JFrame {
         tfNamaGuru = new JTextField();
         tfNamaGuru.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         
-        lblKodeGuru = new JLabel("Kode Registrasi Guru:");
+        lblKodeGuru = new JLabel("NIP Guru (Nomor Induk):");
         lblKodeGuru.setFont(new Font("Segoe UI", Font.BOLD, 12));
         tfKodeGuru = new JPasswordField();
         tfKodeGuru.setFont(new Font("Segoe UI", Font.PLAIN, 14));
@@ -237,24 +237,30 @@ public class Register extends JFrame {
                 String kodeGuru = new String(tfKodeGuru.getPassword());
                 
                 if (namaGuru.isEmpty() || kodeGuru.isEmpty()) {
-                    JOptionPane.showMessageDialog(this, "Nama Lengkap dan Kode Registrasi Guru wajib diisi!");
+                    JOptionPane.showMessageDialog(this, "Nama Lengkap dan NIP Guru wajib diisi!");
                     conn.close(); return;
                 }
                 
-                if (!"GURU2026".equals(kodeGuru)) {
-                    JOptionPane.showMessageDialog(this, "Kode Registrasi Guru tidak valid!");
-                    conn.close(); return;
+                // Validasi NIP Guru ke database
+                PreparedStatement psGuru = conn.prepareStatement("SELECT nama_guru FROM guru WHERE nip = ?");
+                psGuru.setString(1, kodeGuru);
+                ResultSet rsGuru = psGuru.executeQuery();
+                if (!rsGuru.next()) {
+                    JOptionPane.showMessageDialog(this, "NIP Guru tidak terdaftar di sistem! Silakan hubungi Admin.");
+                    rsGuru.close(); psGuru.close(); conn.close(); return;
                 }
+                String namaValidDb = rsGuru.getString("nama_guru");
+                rsGuru.close(); psGuru.close();
                 
-                // Insert Guru
+                // Insert Guru (menggunakan nama asli dari database berdasarkan NIP)
                 PreparedStatement ps = conn.prepareStatement("INSERT INTO users (username, password, role, guru_nama) VALUES (?, ?, 'guru', ?)");
                 ps.setString(1, username);
                 ps.setString(2, password);
-                ps.setString(3, namaGuru);
+                ps.setString(3, namaValidDb);
                 ps.executeUpdate();
                 ps.close();
                 
-                JOptionPane.showMessageDialog(this, "Registrasi Guru Berhasil! Silakan Login.");
+                JOptionPane.showMessageDialog(this, "Registrasi Guru Berhasil!\nSelamat datang, " + namaValidDb + ".\nSilakan Login.");
                 
             } else {
                 // Proses Ortu
