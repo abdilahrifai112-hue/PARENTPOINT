@@ -67,6 +67,13 @@ public class report extends javax.swing.JFrame {
             }
         });
         
+        // Action cari langsung (realtime)
+        txtCari.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                tampilkanLaporan();
+            }
+        });
+        
         styleComponents();
     }
     
@@ -86,18 +93,18 @@ public class report extends javax.swing.JFrame {
             parameters.put("p_kelas", kelas);
             parameters.put("p_cari", "%" + cari + "%");
             
-            String path = "src/parentpoint/report/report_kehadiran.jrxml";
-            java.io.File f = new java.io.File(path);
-            if (!f.exists()) {
-                JOptionPane.showMessageDialog(this, "File desain report tidak ditemukan di:\n" + f.getAbsolutePath());
+            String resourcePath = "/parentpoint/report/report_kehadiran.jrxml";
+            java.io.InputStream is = getClass().getResourceAsStream(resourcePath);
+            if (is == null) {
+                JOptionPane.showMessageDialog(this, "File desain report tidak ditemukan di dalam aplikasi!");
                 return;
             }
             
             // Menggunakan Java Reflection agar source code tetap bisa dikompilasi 
             // walaupun library Jasper belum ada di folder lib/
             Class<?> jrXmlLoaderClass = Class.forName("net.sf.jasperreports.engine.xml.JRXmlLoader");
-            java.lang.reflect.Method loadMethod = jrXmlLoaderClass.getMethod("load", String.class);
-            Object jasperDesign = loadMethod.invoke(null, path);
+            java.lang.reflect.Method loadMethod = jrXmlLoaderClass.getMethod("load", java.io.InputStream.class);
+            Object jasperDesign = loadMethod.invoke(null, is);
             
             Class<?> compileManagerClass = Class.forName("net.sf.jasperreports.engine.JasperCompileManager");
             java.lang.reflect.Method compileMethod = compileManagerClass.getMethod("compileReport", Class.forName("net.sf.jasperreports.engine.design.JasperDesign"));
@@ -145,8 +152,8 @@ public class report extends javax.swing.JFrame {
         String cari = txtCari.getText().trim();
         
         if (dateDari.getDate() == null || dateSampai.getDate() == null) {
-            JOptionPane.showMessageDialog(this, "Tanggal harus dipilih!", 
-                "Peringatan", JOptionPane.WARNING_MESSAGE);
+            // Hindari popup yang mengganggu saat mengetik di fitur Cari,
+            // cukup abort pencarian jika tanggal kosong.
             return;
         }
         
