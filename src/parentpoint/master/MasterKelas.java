@@ -20,6 +20,7 @@ import parentpoint.util.DesignUtil;
 public class MasterKelas extends JFrame {
 
     private int selectedId = -1;
+    private javax.swing.JComboBox<String> cbWaliKelas;
 
     public MasterKelas() {
         initComponents();
@@ -29,6 +30,20 @@ public class MasterKelas extends JFrame {
     }
 
     private void styleComponents() {
+        cbWaliKelas = new javax.swing.JComboBox<>();
+        cbWaliKelas.setFont(new java.awt.Font("Segoe UI", 0, 14));
+        loadWaliKelas();
+        
+        // Timer to wait for GUI builder to finish adding tfWaliKelas
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            if (jPanelField2 != null && tfWaliKelas != null) {
+                jPanelField2.remove(tfWaliKelas);
+                jPanelField2.add(cbWaliKelas, java.awt.BorderLayout.CENTER);
+                jPanelField2.revalidate();
+                jPanelField2.repaint();
+            }
+        });
+        
         this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         setTitle("PARENT POINT - Master Data Kelas");
         setLocationRelativeTo(null);
@@ -102,7 +117,7 @@ public class MasterKelas extends JFrame {
                 int row = jTable1.getSelectedRow();
                 selectedId = Integer.parseInt(jTable1.getValueAt(row, 0).toString());
                 tfNamaKelas.setText(jTable1.getValueAt(row, 1).toString());
-                tfWaliKelas.setText(jTable1.getValueAt(row, 2) != null ? jTable1.getValueAt(row, 2).toString() : "");
+                cbWaliKelas.setSelectedItem(jTable1.getValueAt(row, 2) != null ? jTable1.getValueAt(row, 2).toString() : "- Pilih Wali Kelas -");
                 btnUpdate.setEnabled(true);
                 btnHapus.setEnabled(true);
                 btnSimpan.setEnabled(false);
@@ -144,6 +159,14 @@ public class MasterKelas extends JFrame {
         jPanelHeader.repaint();
     }
 
+    private void loadWaliKelas() {
+        cbWaliKelas.addItem("- Pilih Wali Kelas -");
+        try (Connection conn = koneksi.getConnection()) {
+            java.sql.ResultSet rs = conn.createStatement().executeQuery("SELECT nama_guru FROM guru ORDER BY nama_guru");
+            while(rs.next()) cbWaliKelas.addItem(rs.getString("nama_guru"));
+        } catch (Exception e) {}
+    }
+
     private void loadData() {
         Connection conn = koneksi.getConnection();
         if (conn != null) {
@@ -178,7 +201,7 @@ public class MasterKelas extends JFrame {
             try {
                 PreparedStatement ps = conn.prepareStatement("INSERT INTO kelas (nama_kelas, wali_kelas) VALUES (?,?)");
                 ps.setString(1, tfNamaKelas.getText().trim());
-                ps.setString(2, tfWaliKelas.getText().trim());
+                ps.setString(2, cbWaliKelas.getSelectedIndex() > 0 ? cbWaliKelas.getSelectedItem().toString() : "-");
                 ps.executeUpdate(); ps.close(); conn.close();
                 JOptionPane.showMessageDialog(this, "Data kelas berhasil disimpan!");
                 batal(); loadData();
@@ -195,7 +218,7 @@ public class MasterKelas extends JFrame {
             try {
                 PreparedStatement ps = conn.prepareStatement("UPDATE kelas SET nama_kelas=?, wali_kelas=? WHERE id=?");
                 ps.setString(1, tfNamaKelas.getText().trim());
-                ps.setString(2, tfWaliKelas.getText().trim());
+                ps.setString(2, cbWaliKelas.getSelectedIndex() > 0 ? cbWaliKelas.getSelectedItem().toString() : "-");
                 ps.setInt(3, selectedId);
                 ps.executeUpdate(); ps.close(); conn.close();
                 JOptionPane.showMessageDialog(this, "Data kelas berhasil diupdate!");
@@ -227,7 +250,7 @@ public class MasterKelas extends JFrame {
     }
 
     private void batal() {
-        tfNamaKelas.setText(""); tfWaliKelas.setText("");
+        tfNamaKelas.setText(""); cbWaliKelas.setSelectedIndex(0);
         selectedId = -1; jTable1.clearSelection();
         btnSimpan.setEnabled(true); btnUpdate.setEnabled(false); btnHapus.setEnabled(false);
     }
