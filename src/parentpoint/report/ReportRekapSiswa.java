@@ -98,15 +98,13 @@ public class ReportRekapSiswa extends JFrame {
         pnlBody.setBackground(DesignUtil.BG_MAIN);
         pnlBody.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        // --- FILTER ---
-        JPanel pnlFilter = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 10));
+        // --- FILTER        JPanel pnlFilter = new JPanel(new java.awt.GridLayout(2, 1));
         pnlFilter.setBackground(Color.WHITE);
-        pnlFilter.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(DesignUtil.BORDER_COLOR, 1),
-            BorderFactory.createEmptyBorder(5, 10, 5, 10)
-        ));
+        pnlFilter.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
-        pnlFilter.add(createLabel("Dari Tanggal:"));
+        JPanel row1 = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 15, 5));
+        row1.setBackground(Color.WHITE);
+        row1.add(createLabel("Dari Tanggal:"));
         dcDari = new com.toedter.calendar.JDateChooser();
         java.util.Calendar cal = java.util.Calendar.getInstance();
         cal.set(java.util.Calendar.DAY_OF_MONTH, 1);
@@ -114,40 +112,45 @@ public class ReportRekapSiswa extends JFrame {
         dcDari.setDateFormatString("yyyy-MM-dd");
         dcDari.setPreferredSize(new Dimension(130, 35));
         dcDari.setFont(DesignUtil.FONT_BODY);
-        pnlFilter.add(dcDari);
+        row1.add(dcDari);
 
-        pnlFilter.add(createLabel("Sampai:"));
+        row1.add(createLabel("Sampai:"));
         dcSampai = new com.toedter.calendar.JDateChooser(new java.util.Date());
         dcSampai.setDateFormatString("yyyy-MM-dd");
         dcSampai.setPreferredSize(new Dimension(130, 35));
         dcSampai.setFont(DesignUtil.FONT_BODY);
-        pnlFilter.add(dcSampai);
+        row1.add(dcSampai);
 
-        pnlFilter.add(createLabel("Kelas:"));
+        row1.add(createLabel("Kelas:"));
         cbKelas = new JComboBox<>();
         cbKelas.setFont(DesignUtil.FONT_BODY);
-        cbKelas.setPreferredSize(new Dimension(110, 35));
-        pnlFilter.add(cbKelas);
-        
-        pnlFilter.add(createLabel("Cari Nama:"));
+        cbKelas.setPreferredSize(new Dimension(130, 35));
+        row1.add(cbKelas);
+
+        JPanel row2 = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 15, 5));
+        row2.setBackground(Color.WHITE);
+        row2.add(createLabel("Cari Nama:"));
         tfCariSiswa = createTextField("");
-        tfCariSiswa.setPreferredSize(new Dimension(130, 35));
-        pnlFilter.add(tfCariSiswa);
+        tfCariSiswa.setPreferredSize(new Dimension(200, 35));
+        row2.add(tfCariSiswa);
 
         btnTampilkan = DesignUtil.createButton("🔍 Tampilkan", DesignUtil.SUCCESS);
         btnTampilkan.setPreferredSize(new Dimension(120, 35));
         btnTampilkan.addActionListener(e -> tampilkanLaporan());
-        pnlFilter.add(btnTampilkan);
+        row2.add(btnTampilkan);
 
         btnReset = DesignUtil.createButton("↺ Reset", DesignUtil.WARNING);
-        btnReset.setPreferredSize(new Dimension(90, 35));
+        btnReset.setPreferredSize(new Dimension(100, 35));
         btnReset.addActionListener(e -> resetForm());
-        pnlFilter.add(btnReset);
+        row2.add(btnReset);
         
         btnCetak = DesignUtil.createButton("🖨 Cetak", DesignUtil.PRIMARY);
-        btnCetak.setPreferredSize(new Dimension(95, 35));
+        btnCetak.setPreferredSize(new Dimension(100, 35));
         btnCetak.addActionListener(e -> cetakLaporan());
-        pnlFilter.add(btnCetak);
+        row2.add(btnCetak);
+
+        pnlFilter.add(row1);
+        pnlFilter.add(row2);
 
         pnlBody.add(pnlFilter, BorderLayout.NORTH);
         
@@ -426,8 +429,9 @@ public class ReportRekapSiswa extends JFrame {
             
             net.sf.jasperreports.engine.data.JRTableModelDataSource dataSource = new net.sf.jasperreports.engine.data.JRTableModelDataSource(tblData.getModel());
             
-            java.io.File file = new java.io.File("src/parentpoint/report/report_rekap_siswa.jrxml");
-            net.sf.jasperreports.engine.design.JasperDesign jd = net.sf.jasperreports.engine.xml.JRXmlLoader.load(file);
+            java.io.InputStream reportStream = getClass().getResourceAsStream("/parentpoint/report/report_rekap_siswa.jrxml");
+            if (reportStream == null) throw new java.io.FileNotFoundException("File report_rekap_siswa.jrxml tidak ditemukan di classpath.");
+            net.sf.jasperreports.engine.design.JasperDesign jd = net.sf.jasperreports.engine.xml.JRXmlLoader.load(reportStream);
             net.sf.jasperreports.engine.JasperReport jr = net.sf.jasperreports.engine.JasperCompileManager.compileReport(jd);
             
             net.sf.jasperreports.engine.JasperPrint jp = net.sf.jasperreports.engine.JasperFillManager.fillReport(jr, param, dataSource);

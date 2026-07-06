@@ -387,8 +387,9 @@ public class ReportRekapKelas extends JFrame {
             
             net.sf.jasperreports.engine.data.JRTableModelDataSource dataSource = new net.sf.jasperreports.engine.data.JRTableModelDataSource(tblData.getModel());
             
-            java.io.File file = new java.io.File("src/parentpoint/report/report_rekap_kelas.jrxml");
-            net.sf.jasperreports.engine.design.JasperDesign jd = net.sf.jasperreports.engine.xml.JRXmlLoader.load(file);
+            java.io.InputStream reportStream = getClass().getResourceAsStream("/parentpoint/report/report_rekap_kelas.jrxml");
+            if (reportStream == null) throw new java.io.FileNotFoundException("File report_rekap_kelas.jrxml tidak ditemukan di classpath.");
+            net.sf.jasperreports.engine.design.JasperDesign jd = net.sf.jasperreports.engine.xml.JRXmlLoader.load(reportStream);
             net.sf.jasperreports.engine.JasperReport jr = net.sf.jasperreports.engine.JasperCompileManager.compileReport(jd);
             
             net.sf.jasperreports.engine.JasperPrint jp = net.sf.jasperreports.engine.JasperFillManager.fillReport(jr, param, dataSource);
