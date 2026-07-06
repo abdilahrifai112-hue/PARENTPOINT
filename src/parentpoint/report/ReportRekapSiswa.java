@@ -33,9 +33,10 @@ import parentpoint.util.DesignUtil;
  */
 public class ReportRekapSiswa extends JFrame {
 
-    private JTextField tfDari, tfSampai;
+    private com.toedter.calendar.JDateChooser tfDari, tfSampai;
+    private JTextField tfCariSiswa;
     private JComboBox<String> cbKelas;
-    private JButton btnTampilkan, btnReset;
+    private JButton btnTampilkan, btnReset, btnCetak;
     private JTable tblData;
     private JLabel lblTotalSiswa, lblRataHadir;
 
@@ -106,28 +107,53 @@ public class ReportRekapSiswa extends JFrame {
         ));
 
         pnlFilter.add(createLabel("Dari Tanggal:"));
-        tfDari = createTextField("2026-06-01");
+        tfDari = new com.toedter.calendar.JDateChooser();
+        tfDari.setDateFormatString("yyyy-MM-dd");
+        tfDari.setPreferredSize(new Dimension(130, 35));
+        tfDari.setFont(DesignUtil.FONT_BODY);
+        try { tfDari.setDate(new java.text.SimpleDateFormat("yyyy-MM-01").parse(new java.text.SimpleDateFormat("yyyy-MM-01").format(new java.util.Date()))); } catch(Exception ex){}
         pnlFilter.add(tfDari);
 
         pnlFilter.add(createLabel("Sampai:"));
-        tfSampai = createTextField("2026-06-30");
+        tfSampai = new com.toedter.calendar.JDateChooser();
+        tfSampai.setDateFormatString("yyyy-MM-dd");
+        tfSampai.setPreferredSize(new Dimension(130, 35));
+        tfSampai.setFont(DesignUtil.FONT_BODY);
+        tfSampai.setDate(new java.util.Date());
         pnlFilter.add(tfSampai);
 
         pnlFilter.add(createLabel("Kelas:"));
         cbKelas = new JComboBox<>();
         cbKelas.setFont(DesignUtil.FONT_BODY);
-        cbKelas.setPreferredSize(new Dimension(150, 35));
+        cbKelas.setPreferredSize(new Dimension(110, 35));
         pnlFilter.add(cbKelas);
+        
+        pnlFilter.add(createLabel("Cari:"));
+        tfCariSiswa = createTextField("Nama/NIS...");
+        tfCariSiswa.setPreferredSize(new Dimension(110, 35));
+        pnlFilter.add(tfCariSiswa);
+        tfCariSiswa.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                tampilkanLaporan();
+            }
+        });
 
-        btnTampilkan = DesignUtil.createButton("🔍 Tampilkan", DesignUtil.SUCCESS);
-        btnTampilkan.setPreferredSize(new Dimension(140, 35));
+        btnTampilkan = DesignUtil.createButton("🔍", DesignUtil.SUCCESS);
+        btnTampilkan.setToolTipText("Tampilkan");
+        btnTampilkan.setPreferredSize(new Dimension(50, 35));
         btnTampilkan.addActionListener(e -> tampilkanLaporan());
         pnlFilter.add(btnTampilkan);
 
-        btnReset = DesignUtil.createButton("↺ Reset", DesignUtil.WARNING);
-        btnReset.setPreferredSize(new Dimension(100, 35));
+        btnReset = DesignUtil.createButton("↺", DesignUtil.WARNING);
+        btnReset.setToolTipText("Reset");
+        btnReset.setPreferredSize(new Dimension(50, 35));
         btnReset.addActionListener(e -> resetForm());
         pnlFilter.add(btnReset);
+        
+        btnCetak = DesignUtil.createButton("🖨 Cetak", DesignUtil.PRIMARY);
+        btnCetak.setPreferredSize(new Dimension(95, 35));
+        btnCetak.addActionListener(e -> cetakLaporan());
+        pnlFilter.add(btnCetak);
 
         pnlBody.add(pnlFilter, BorderLayout.NORTH);
 
@@ -286,12 +312,14 @@ public class ReportRekapSiswa extends JFrame {
     }
 
     private void tampilkanLaporan() {
-        String dari = tfDari.getText().trim();
-        String sampai = tfSampai.getText().trim();
+        String dari = tfDari.getDate() != null ? new java.text.SimpleDateFormat("yyyy-MM-dd").format(tfDari.getDate()) : "";
+        String sampai = tfSampai.getDate() != null ? new java.text.SimpleDateFormat("yyyy-MM-dd").format(tfSampai.getDate()) : "";
         String kelas = (String) cbKelas.getSelectedItem();
+        String cari = tfCariSiswa != null ? tfCariSiswa.getText().trim() : "";
+        if (cari.equals("Nama/NIS...")) cari = "";
 
         if (dari.isEmpty() || sampai.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Tanggal harus diisi! Format: yyyy-MM-dd", "Peringatan", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Tanggal harus diisi!", "Peringatan", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -311,6 +339,7 @@ public class ReportRekapSiswa extends JFrame {
                 + "WHERE 1=1 ";
 
             if (kelas != null && !kelas.equals("Semua Kelas")) sql += "AND k.nama_kelas = ? ";
+            if (!cari.isEmpty()) sql += "AND (s.nama LIKE ? OR s.nis LIKE ?) ";
             
             String role = parentpoint.util.Session.getRole();
             if ("orang_tua".equalsIgnoreCase(role) || "siswa".equalsIgnoreCase(role)) {
@@ -327,7 +356,15 @@ public class ReportRekapSiswa extends JFrame {
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, dari);
             ps.setString(2, sampai);
-            if (kelas != null && !kelas.equals("Semua Kelas")) ps.setString(3, kelas);
+            
+            int pIndex = 3;
+            if (kelas != null && !kelas.equals("Semua Kelas")) {
+                ps.setString(pIndex++, kelas);
+            }
+            if (!cari.isEmpty()) {
+                ps.setString(pIndex++, "%" + cari + "%");
+                ps.setString(pIndex++, "%" + cari + "%");
+            }
 
             ResultSet rs = ps.executeQuery();
             DefaultTableModel model = (DefaultTableModel) tblData.getModel();
@@ -372,12 +409,66 @@ public class ReportRekapSiswa extends JFrame {
     }
 
     private void resetForm() {
-        tfDari.setText("2026-06-01");
-        tfSampai.setText("2026-06-30");
+        try { tfDari.setDate(new java.text.SimpleDateFormat("yyyy-MM-01").parse(new java.text.SimpleDateFormat("yyyy-MM-01").format(new java.util.Date()))); } catch(Exception ex){}
+        tfSampai.setDate(new java.util.Date());
         cbKelas.setSelectedIndex(0);
+        tfCariSiswa.setText("Nama/NIS...");
         lblTotalSiswa.setText("0");
         lblRataHadir.setText("0%");
         ((DefaultTableModel) tblData.getModel()).setRowCount(0);
+    }
+
+    private void cetakLaporan() {
+        try {
+            java.sql.Connection conn = koneksi.getConnection();
+            
+            String kelas = (String) cbKelas.getSelectedItem();
+            String dariTanggal = tfDari.getDate() != null ? new java.text.SimpleDateFormat("yyyy-MM-dd").format(tfDari.getDate()) : "";
+            String sampaiTanggal = tfSampai.getDate() != null ? new java.text.SimpleDateFormat("yyyy-MM-dd").format(tfSampai.getDate()) : "";
+            String cari = tfCariSiswa != null ? tfCariSiswa.getText().trim() : "";
+            if (cari.equals("Nama/NIS...")) cari = "";
+            
+            if (dariTanggal.isEmpty() || sampaiTanggal.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Tanggal harus diisi sebelum mencetak!", "Peringatan", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            
+            java.util.HashMap<String, Object> parameters = new java.util.HashMap<>();
+            parameters.put("p_dari", dariTanggal);
+            parameters.put("p_sampai", sampaiTanggal);
+            parameters.put("p_kelas", kelas);
+            parameters.put("p_cari", "%" + cari + "%");
+            
+            // Assuming report_rekap_siswa.jrxml will be placed in the report package
+            String resourcePath = "/parentpoint/report/report_rekap_siswa.jrxml";
+            java.io.InputStream is = getClass().getResourceAsStream(resourcePath);
+            if (is == null) {
+                JOptionPane.showMessageDialog(this, "File desain report tidak ditemukan di dalam aplikasi!");
+                return;
+            }
+            
+            Class<?> jrXmlLoaderClass = Class.forName("net.sf.jasperreports.engine.xml.JRXmlLoader");
+            java.lang.reflect.Method loadMethod = jrXmlLoaderClass.getMethod("load", java.io.InputStream.class);
+            Object jasperDesign = loadMethod.invoke(null, is);
+            
+            Class<?> compileManagerClass = Class.forName("net.sf.jasperreports.engine.JasperCompileManager");
+            java.lang.reflect.Method compileMethod = compileManagerClass.getMethod("compileReport", Class.forName("net.sf.jasperreports.engine.design.JasperDesign"));
+            Object jasperReport = compileMethod.invoke(null, jasperDesign);
+            
+            Class<?> fillManagerClass = Class.forName("net.sf.jasperreports.engine.JasperFillManager");
+            java.lang.reflect.Method fillMethod = fillManagerClass.getMethod("fillReport", Class.forName("net.sf.jasperreports.engine.JasperReport"), java.util.Map.class, java.sql.Connection.class);
+            Object jasperPrint = fillMethod.invoke(null, jasperReport, parameters, conn);
+            
+            Class<?> viewerClass = Class.forName("net.sf.jasperreports.view.JasperViewer");
+            java.lang.reflect.Method viewMethod = viewerClass.getMethod("viewReport", Class.forName("net.sf.jasperreports.engine.JasperPrint"), boolean.class);
+            viewMethod.invoke(null, jasperPrint, false);
+            
+        } catch (ClassNotFoundException e) {
+            JOptionPane.showMessageDialog(this, "Library JasperReports (iReport) belum dimasukkan ke dalam project!", "Library Tidak Ditemukan", JOptionPane.WARNING_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Gagal mencetak laporan: " + e.getMessage(), "Error Cetak", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
     }
 
     private void styleComponents() {
