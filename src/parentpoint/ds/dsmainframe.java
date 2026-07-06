@@ -398,6 +398,57 @@ public class dsmainframe extends javax.swing.JFrame {
         jPanelSidebarMenu.add(btnJadwal, 1); // 1 = di bawah Dashboard (jButton1)
         jPanelSidebarMenu.revalidate();
         jPanelSidebarMenu.repaint();
+        
+        // ── Bungkus Sidebar Menu dengan Custom JScrollPane agar bisa di-scroll ──
+        jPanelSidebar.remove(jPanelSidebarMenu);
+        
+        // Pastikan menu punya ukuran fix agar JScrollPane mendeteksi kalau isinya melebihi layar
+        jPanelSidebarMenu.setPreferredSize(new java.awt.Dimension(220, 650)); 
+        
+        javax.swing.JScrollPane scrollSidebar = new javax.swing.JScrollPane(jPanelSidebarMenu);
+        scrollSidebar.setBorder(null);
+        scrollSidebar.setBackground(DesignUtil.BG_SIDEBAR);
+        scrollSidebar.getViewport().setBackground(DesignUtil.BG_SIDEBAR);
+        scrollSidebar.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollSidebar.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        scrollSidebar.getVerticalScrollBar().setUnitIncrement(16);
+        scrollSidebar.getVerticalScrollBar().setPreferredSize(new java.awt.Dimension(10, 0)); // Lebih tebal agar terlihat
+        
+        // Styling Scrollbar agar terlihat modern tapi jelas
+        scrollSidebar.getVerticalScrollBar().setUI(new javax.swing.plaf.basic.BasicScrollBarUI() {
+            @Override
+            protected void configureScrollBarColors() {
+                this.thumbColor = new java.awt.Color(255, 255, 255, 200); // Jauh lebih terang
+                this.trackColor = DesignUtil.BG_SIDEBAR;
+            }
+            @Override
+            protected javax.swing.JButton createDecreaseButton(int orientation) { return createZeroButton(); }
+            @Override
+            protected javax.swing.JButton createIncreaseButton(int orientation) { return createZeroButton(); }
+            private javax.swing.JButton createZeroButton() {
+                javax.swing.JButton jb = new javax.swing.JButton();
+                jb.setPreferredSize(new java.awt.Dimension(0, 0));
+                return jb;
+            }
+            @Override
+            protected void paintThumb(java.awt.Graphics g, javax.swing.JComponent c, java.awt.Rectangle thumbBounds) {
+                if (thumbBounds.isEmpty() || !scrollbar.isEnabled()) return;
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setPaint(thumbColor);
+                g2.fillRoundRect(thumbBounds.x, thumbBounds.y + 2, thumbBounds.width - 2, thumbBounds.height - 4, 10, 10);
+                g2.dispose();
+            }
+            @Override
+            protected void paintTrack(java.awt.Graphics g, javax.swing.JComponent c, java.awt.Rectangle trackBounds) {
+                g.setColor(trackColor);
+                g.fillRect(trackBounds.x, trackBounds.y, trackBounds.width, trackBounds.height);
+            }
+        });
+        
+        jPanelSidebar.add(scrollSidebar, java.awt.BorderLayout.CENTER);
+        jPanelSidebar.revalidate();
+        jPanelSidebar.repaint();
     }
     
     private void loadDashboardData() {
