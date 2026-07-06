@@ -170,6 +170,13 @@ public class ReportAlpha extends JFrame {
         pnlFilter.add(btnCetak);
 
         pnlBody.add(pnlFilter, BorderLayout.NORTH);
+        
+        String role = parentpoint.util.Session.getRole();
+        if ("orang_tua".equalsIgnoreCase(role) || "siswa".equalsIgnoreCase(role)) {
+            cbKelas.setEnabled(false);
+            tfCariSiswa.setEnabled(false);
+            tfCariSiswa.setText(parentpoint.util.Session.getNamaSiswa());
+        }
 
         // --- SUMMARY CARDS ---
         JPanel pnlCards = new JPanel(new java.awt.GridLayout(1, 3, 15, 0));
@@ -325,7 +332,18 @@ public class ReportAlpha extends JFrame {
                 cbKelas.removeAllItems();
                 cbKelas.addItem("Semua Kelas");
                 java.sql.Statement st = conn.createStatement();
-                ResultSet rs = st.executeQuery("SELECT nama_kelas FROM kelas ORDER BY nama_kelas");
+                String sql = "SELECT nama_kelas FROM kelas ";
+                
+                String role = parentpoint.util.Session.getRole();
+                if ("guru".equalsIgnoreCase(role)) {
+                    String g = parentpoint.util.Session.getGuruNama();
+                    sql = "SELECT DISTINCT k.nama_kelas FROM kelas k " +
+                          "LEFT JOIN jadwal_kelas j ON j.kelas_id = k.id " +
+                          "WHERE k.wali_kelas = '" + g + "' OR j.guru = '" + g + "' ";
+                }
+                sql += " ORDER BY nama_kelas";
+                
+                ResultSet rs = st.executeQuery(sql);
                 while (rs.next()) cbKelas.addItem(rs.getString("nama_kelas"));
                 rs.close(); st.close(); conn.close();
             } catch (SQLException e) {

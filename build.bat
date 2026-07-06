@@ -31,9 +31,9 @@ cd ..
 jar cfm PARENTPOINT_SiapPakai.jar manifest.txt -C temp_build .
 
 echo === 3. Membuat ZIP Release ===
-if not exist Releases mkdir Releases
-del /F /Q Releases\PARENTPOINT_Release.zip 2>nul
-powershell -Command "Compress-Archive -Path PARENTPOINT_SiapPakai.jar, lib, parentpoint_db.sql -DestinationPath Releases\PARENTPOINT_Release.zip -Force"
+:: if not exist Releases mkdir Releases
+:: del /F /Q Releases\PARENTPOINT_Release.zip 2>nul
+:: powershell -Command "Compress-Archive -Path PARENTPOINT_SiapPakai.jar, lib, parentpoint_db.sql -DestinationPath Releases\PARENTPOINT_Release.zip -Force"
 
 echo === SELESAI ===
 echo File PARENTPOINT_SiapPakai.jar dan Releases\PARENTPOINT_Release.zip sudah siap!

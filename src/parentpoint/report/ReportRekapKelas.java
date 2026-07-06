@@ -292,6 +292,11 @@ public class ReportRekapKelas extends JFrame {
                 + "LEFT JOIN kehadiran h ON h.siswa_id = s.id AND h.tanggal BETWEEN ? AND ? "
                 + "WHERE 1=1 ";
             
+            if ("guru".equalsIgnoreCase(parentpoint.util.Session.getRole())) {
+                String g = parentpoint.util.Session.getGuruNama();
+                sql += "AND (k.wali_kelas = '" + g + "' OR k.id IN (SELECT kelas_id FROM jadwal_kelas WHERE guru = '" + g + "')) ";
+            }
+            
             if (!cari.isEmpty()) {
                 sql += "AND (k.nama_kelas LIKE ? OR k.wali_kelas LIKE ?) ";
             }

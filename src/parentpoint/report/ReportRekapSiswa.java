@@ -150,6 +150,13 @@ public class ReportRekapSiswa extends JFrame {
         pnlFilter.add(btnCetak);
 
         pnlBody.add(pnlFilter, BorderLayout.NORTH);
+        
+        String role = parentpoint.util.Session.getRole();
+        if ("orang_tua".equalsIgnoreCase(role) || "siswa".equalsIgnoreCase(role)) {
+            cbKelas.setEnabled(false);
+            tfCariSiswa.setEnabled(false);
+            tfCariSiswa.setText(parentpoint.util.Session.getNamaSiswa());
+        }
 
         // --- SUMMARY CARDS ---
         JPanel pnlCards = new JPanel(new java.awt.GridLayout(1, 2, 15, 0));
