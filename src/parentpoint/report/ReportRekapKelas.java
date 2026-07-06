@@ -33,10 +33,11 @@ import parentpoint.util.DesignUtil;
  */
 public class ReportRekapKelas extends JFrame {
 
-    private JTextField tfDari, tfSampai;
-    private JButton btnTampilkan, btnReset;
+    private com.toedter.calendar.JDateChooser dcDari, dcSampai;
+    private JTextField tfCariKelas;
+    private JButton btnTampilkan, btnReset, btnCetak;
     private JTable tblData;
-    private JLabel lblTotalKelas, lblKelasUnggul;
+    private JLabel lblTotalKelas, lblKelasUnggul, lblKelasTerendah;
 
     public ReportRekapKelas() {
         initComponents();
@@ -104,35 +105,56 @@ public class ReportRekapKelas extends JFrame {
         ));
 
         pnlFilter.add(createLabel("Dari Tanggal:"));
-        tfDari = createTextField("2026-06-01");
-        pnlFilter.add(tfDari);
+        dcDari = new com.toedter.calendar.JDateChooser();
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.set(java.util.Calendar.DAY_OF_MONTH, 1);
+        dcDari.setDate(cal.getTime());
+        dcDari.setDateFormatString("yyyy-MM-dd");
+        dcDari.setPreferredSize(new Dimension(130, 35));
+        dcDari.setFont(DesignUtil.FONT_BODY);
+        pnlFilter.add(dcDari);
 
         pnlFilter.add(createLabel("Sampai:"));
-        tfSampai = createTextField("2026-06-30");
-        pnlFilter.add(tfSampai);
+        dcSampai = new com.toedter.calendar.JDateChooser(new java.util.Date());
+        dcSampai.setDateFormatString("yyyy-MM-dd");
+        dcSampai.setPreferredSize(new Dimension(130, 35));
+        dcSampai.setFont(DesignUtil.FONT_BODY);
+        pnlFilter.add(dcSampai);
+
+        pnlFilter.add(createLabel("Cari Kelas/Wali:"));
+        tfCariKelas = createTextField("");
+        tfCariKelas.setPreferredSize(new Dimension(130, 35));
+        pnlFilter.add(tfCariKelas);
 
         btnTampilkan = DesignUtil.createButton("🔍 Tampilkan", new Color(124, 58, 237));
-        btnTampilkan.setPreferredSize(new Dimension(140, 35));
+        btnTampilkan.setPreferredSize(new Dimension(120, 35));
         btnTampilkan.addActionListener(e -> tampilkanLaporan());
         pnlFilter.add(btnTampilkan);
 
         btnReset = DesignUtil.createButton("↺ Reset", DesignUtil.WARNING);
-        btnReset.setPreferredSize(new Dimension(100, 35));
+        btnReset.setPreferredSize(new Dimension(90, 35));
         btnReset.addActionListener(e -> resetForm());
         pnlFilter.add(btnReset);
+        
+        btnCetak = DesignUtil.createButton("🖨 Cetak", DesignUtil.PRIMARY);
+        btnCetak.setPreferredSize(new Dimension(95, 35));
+        btnCetak.addActionListener(e -> cetakLaporan());
+        pnlFilter.add(btnCetak);
 
         pnlBody.add(pnlFilter, BorderLayout.NORTH);
 
         // --- SUMMARY CARDS ---
-        JPanel pnlCards = new JPanel(new java.awt.GridLayout(1, 2, 15, 0));
+        JPanel pnlCards = new JPanel(new java.awt.GridLayout(1, 3, 15, 0));
         pnlCards.setBackground(DesignUtil.BG_MAIN);
         pnlCards.setPreferredSize(new Dimension(0, 100));
 
         lblTotalKelas = new JLabel("0");
         lblKelasUnggul = new JLabel("-");
+        lblKelasTerendah = new JLabel("-");
 
-        pnlCards.add(buatCard("TOTAL KELAS TERDAFTAR", lblTotalKelas, new Color(124, 58, 237)));
-        pnlCards.add(buatCard("KELAS KEHADIRAN TERTINGGI", lblKelasUnggul, DesignUtil.SUCCESS));
+        pnlCards.add(buatCard("TOTAL KELAS", lblTotalKelas, new Color(124, 58, 237)));
+        pnlCards.add(buatCard("TERTINGGI", lblKelasUnggul, DesignUtil.SUCCESS));
+        pnlCards.add(buatCard("TERENDAH", lblKelasTerendah, DesignUtil.DANGER));
 
         JPanel pnlCenter = new JPanel(new BorderLayout(0, 15));
         pnlCenter.setBackground(DesignUtil.BG_MAIN);
@@ -245,11 +267,12 @@ public class ReportRekapKelas extends JFrame {
     }
 
     private void tampilkanLaporan() {
-        String dari = tfDari.getText().trim();
-        String sampai = tfSampai.getText().trim();
+        String dari = dcDari.getDate() != null ? new java.text.SimpleDateFormat("yyyy-MM-dd").format(dcDari.getDate()) : "";
+        String sampai = dcSampai.getDate() != null ? new java.text.SimpleDateFormat("yyyy-MM-dd").format(dcSampai.getDate()) : "";
+        String cari = tfCariKelas.getText().trim();
 
         if (dari.isEmpty() || sampai.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Tanggal harus diisi! Format: yyyy-MM-dd", "Peringatan", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Tanggal harus diisi dengan benar!", "Peringatan", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -267,12 +290,23 @@ public class ReportRekapKelas extends JFrame {
                 + "FROM kelas k "
                 + "LEFT JOIN siswa s ON s.kelas_id = k.id "
                 + "LEFT JOIN kehadiran h ON h.siswa_id = s.id AND h.tanggal BETWEEN ? AND ? "
-                + "GROUP BY k.id, k.nama_kelas, k.wali_kelas "
+                + "WHERE 1=1 ";
+            
+            if (!cari.isEmpty()) {
+                sql += "AND (k.nama_kelas LIKE ? OR k.wali_kelas LIKE ?) ";
+            }
+            
+            sql += "GROUP BY k.id, k.nama_kelas, k.wali_kelas "
                 + "ORDER BY k.nama_kelas";
 
             PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, dari);
-            ps.setString(2, sampai);
+            int paramIndex = 1;
+            ps.setString(paramIndex++, dari);
+            ps.setString(paramIndex++, sampai);
+            if (!cari.isEmpty()) {
+                ps.setString(paramIndex++, "%" + cari + "%");
+                ps.setString(paramIndex++, "%" + cari + "%");
+            }
 
             ResultSet rs = ps.executeQuery();
             DefaultTableModel model = (DefaultTableModel) tblData.getModel();
@@ -280,7 +314,9 @@ public class ReportRekapKelas extends JFrame {
 
             int totalKelas = 0;
             double maxPct = -1;
+            double minPct = 101;
             String kelasUnggul = "-";
+            String kelasTerendah = "-";
 
             while (rs.next()) {
                 int h = rs.getInt("hadir");
@@ -300,11 +336,16 @@ public class ReportRekapKelas extends JFrame {
                     maxPct = pct;
                     kelasUnggul = rs.getString("nama_kelas") + " (" + String.format("%.1f%%", pct) + ")";
                 }
+                if (pct < minPct) {
+                    minPct = pct;
+                    kelasTerendah = rs.getString("nama_kelas") + " (" + String.format("%.1f%%", pct) + ")";
+                }
                 totalKelas++;
             }
 
             lblTotalKelas.setText(String.valueOf(totalKelas));
             lblKelasUnggul.setText(kelasUnggul);
+            lblKelasTerendah.setText(totalKelas > 0 ? kelasTerendah : "-");
 
             rs.close(); ps.close(); conn.close();
 
@@ -318,15 +359,45 @@ public class ReportRekapKelas extends JFrame {
     }
 
     private void resetForm() {
-        tfDari.setText("2026-06-01");
-        tfSampai.setText("2026-06-30");
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.set(java.util.Calendar.DAY_OF_MONTH, 1);
+        dcDari.setDate(cal.getTime());
+        dcSampai.setDate(new java.util.Date());
+        tfCariKelas.setText("");
         lblTotalKelas.setText("0");
         lblKelasUnggul.setText("-");
+        lblKelasTerendah.setText("-");
         ((DefaultTableModel) tblData.getModel()).setRowCount(0);
     }
 
+    private void cetakLaporan() {
+        if (tblData.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this, "Tidak ada data untuk dicetak. Silakan tampilkan data terlebih dahulu.", "Peringatan", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        try {
+            java.util.HashMap<String, Object> param = new java.util.HashMap<>();
+            param.put("p_dari", dcDari.getDate() != null ? new java.text.SimpleDateFormat("yyyy-MM-dd").format(dcDari.getDate()) : "-");
+            param.put("p_sampai", dcSampai.getDate() != null ? new java.text.SimpleDateFormat("yyyy-MM-dd").format(dcSampai.getDate()) : "-");
+            
+            net.sf.jasperreports.engine.data.JRTableModelDataSource dataSource = new net.sf.jasperreports.engine.data.JRTableModelDataSource(tblData.getModel());
+            
+            java.io.File file = new java.io.File("src/parentpoint/report/report_rekap_kelas.jrxml");
+            net.sf.jasperreports.engine.design.JasperDesign jd = net.sf.jasperreports.engine.xml.JRXmlLoader.load(file);
+            net.sf.jasperreports.engine.JasperReport jr = net.sf.jasperreports.engine.JasperCompileManager.compileReport(jd);
+            
+            net.sf.jasperreports.engine.JasperPrint jp = net.sf.jasperreports.engine.JasperFillManager.fillReport(jr, param, dataSource);
+            net.sf.jasperreports.view.JasperViewer.viewReport(jp, false);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Gagal mencetak laporan:\n" + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     private void styleComponents() {
-        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);}
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
+    }
 
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(() -> new ReportRekapKelas().setVisible(true));
