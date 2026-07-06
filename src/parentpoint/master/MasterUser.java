@@ -158,12 +158,12 @@ public class MasterUser extends JFrame {
         jPanelHeader.revalidate();
         jPanelHeader.repaint();
         
-        // RBAC: If guru, disable add/delete and lock username/role
+        // RBAC: If guru, disable add/delete and hide username/role
         if ("guru".equalsIgnoreCase(parentpoint.util.Session.getRole())) {
             btnSimpan.setVisible(false);
             btnHapus.setVisible(false);
-            tfUsername.setEnabled(false);
-            cbRole.setEnabled(false);
+            jPanelFieldUsername.setVisible(false);
+            jPanelFieldRole.setVisible(false);
         }
     }
 
