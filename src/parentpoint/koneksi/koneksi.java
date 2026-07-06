@@ -16,10 +16,9 @@ import javax.swing.JOptionPane;
  */
 public class koneksi {
     
-    private static final String DB_URL = "jdbc:mysql://mysql-376e00b2-parentpoint.l.aivencloud.com:15291/defaultdb?sslMode=REQUIRED";
+    private static final String DB_URL = "jdbc:mysql://mysql-376e00b2-parentpoint.l.aivencloud.com:15291/defaultdb?sslMode=REQUIRED&connectTimeout=5000&socketTimeout=10000";
     private static final String DB_USER = "avnadmin";
     private static final String DB_PASSWORD = "AVNS_" + "lhd08POvRKfTaZG47Ba";
-    
     /**
      * Mendapatkan koneksi ke database MySQL
      * @return Connection object atau null jika gagal
@@ -30,12 +29,16 @@ public class koneksi {
             Class.forName("com.mysql.cj.jdbc.Driver");
             conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
         } catch (ClassNotFoundException e) {
+            System.err.println("JDBC DRIVER ERROR: " + e.getMessage());
+            e.printStackTrace();
             JOptionPane.showMessageDialog(null, 
                 "MySQL JDBC Driver tidak ditemukan!\n"
                 + "Pastikan mysql-connector-java.jar sudah ditambahkan ke Libraries.\n"
                 + "Error: " + e.getMessage(),
                 "Error Driver", JOptionPane.ERROR_MESSAGE);
         } catch (SQLException e) {
+            System.err.println("SQL CONNECTION ERROR: " + e.getMessage());
+            e.printStackTrace();
             JOptionPane.showMessageDialog(null, 
                 "Gagal koneksi ke database!\n"
                 + "Pastikan MySQL server (XAMPP) sudah berjalan.\n"
