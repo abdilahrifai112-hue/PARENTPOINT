@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" 
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" 
+              name="report_alpha" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="abcdef12-3456-7890-abcd-ef1234567899">
+    <parameter name="p_dari" class="java.lang.String"/>
+    <parameter name="p_sampai" class="java.lang.String"/>
+    
+    <field name="#" class="java.lang.Integer"/>
+    <field name="NIS" class="java.lang.String"/>
+    <field name="Nama Siswa" class="java.lang.String"/>
+    <field name="Kelas" class="java.lang.String"/>
+    <field name="Wali Kelas" class="java.lang.String"/>
+    <field name="No. HP Ortu" class="java.lang.String"/>
+    <field name="Jml Alpha" class="java.lang.Integer"/>
+    <field name="Jml Izin" class="java.lang.Integer"/>
+    <field name="Jml Sakit" class="java.lang.Integer"/>
+    <field name="Total Hadir" class="java.lang.Integer"/>
+    <field name="% Alpha" class="java.lang.String"/>
+    <field name="Status Risiko" class="java.lang.String"/>
+    
+    <title>
+        <band height="70" splitType="Stretch">
+            <staticText>
+                <reportElement x="0" y="0" width="802" height="30" uuid="11111111-1111-1111-1111-111111111112"/>
+                <textElement textAlignment="Center">
+                    <font size="18" isBold="true"/>
+                </textElement>
+                <text><![CDATA[LAPORAN SISWA SERING ABSEN (ALPHA)]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="0" y="30" width="802" height="20" uuid="22222222-2222-2222-2222-222222222223"/>
+                <textElement textAlignment="Center"/>
+                <textFieldExpression><![CDATA["Periode: " + $P{p_dari} + " s/d " + $P{p_sampai}]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+    
+    <columnHeader>
+        <band height="20" splitType="Stretch">
+            <staticText><reportElement x="0" y="0" width="30" height="20" uuid="h1"/><box><pen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font isBold="true"/></textElement><text><![CDATA[#]]></text></staticText>
+            <staticText><reportElement x="30" y="0" width="60" height="20" uuid="h2"/><box><pen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font isBold="true"/></textElement><text><![CDATA[NIS]]></text></staticText>
+            <staticText><reportElement x="90" y="0" width="130" height="20" uuid="h3"/><box><pen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font isBold="true"/></textElement><text><![CDATA[Nama Siswa]]></text></staticText>
+            <staticText><reportElement x="220" y="0" width="60" height="20" uuid="h4"/><box><pen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font isBold="true"/></textElement><text><![CDATA[Kelas]]></text></staticText>
+            <staticText><reportElement x="280" y="0" width="100" height="20" uuid="h5"/><box><pen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font isBold="true"/></textElement><text><![CDATA[Wali Kelas]]></text></staticText>
+            <staticText><reportElement x="380" y="0" width="90" height="20" uuid="h6"/><box><pen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font isBold="true"/></textElement><text><![CDATA[No. HP Ortu]]></text></staticText>
+            <staticText><reportElement x="470" y="0" width="40" height="20" uuid="h7"/><box><pen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font isBold="true"/></textElement><text><![CDATA[Alpha]]></text></staticText>
+            <staticText><reportElement x="510" y="0" width="40" height="20" uuid="h8"/><box><pen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font isBold="true"/></textElement><text><![CDATA[Izin]]></text></staticText>
+            <staticText><reportElement x="550" y="0" width="40" height="20" uuid="h9"/><box><pen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font isBold="true"/></textElement><text><![CDATA[Sakit]]></text></staticText>
+            <staticText><reportElement x="590" y="0" width="40" height="20" uuid="h10"/><box><pen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font isBold="true"/></textElement><text><![CDATA[Hadir]]></text></staticText>
+            <staticText><reportElement x="630" y="0" width="50" height="20" uuid="h11"/><box><pen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font isBold="true"/></textElement><text><![CDATA[% Alpha]]></text></staticText>
+            <staticText><reportElement x="680" y="0" width="122" height="20" uuid="h12"/><box><pen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"><font isBold="true"/></textElement><text><![CDATA[Status Risiko]]></text></staticText>
+        </band>
+    </columnHeader>
+    
+    <detail>
+        <band height="20" splitType="Stretch">
+            <textField><reportElement x="0" y="0" width="30" height="20" uuid="d1"/><box><pen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{#}]]></textFieldExpression></textField>
+            <textField><reportElement x="30" y="0" width="60" height="20" uuid="d2"/><box><pen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{NIS}]]></textFieldExpression></textField>
+            <textField><reportElement x="90" y="0" width="130" height="20" uuid="d3"/><box><pen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{Nama Siswa}]]></textFieldExpression></textField>
+            <textField><reportElement x="220" y="0" width="60" height="20" uuid="d4"/><box><pen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{Kelas}]]></textFieldExpression></textField>
+            <textField><reportElement x="280" y="0" width="100" height="20" uuid="d5"/><box><pen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{Wali Kelas}]]></textFieldExpression></textField>
+            <textField><reportElement x="380" y="0" width="90" height="20" uuid="d6"/><box><pen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{No. HP Ortu}]]></textFieldExpression></textField>
+            <textField><reportElement x="470" y="0" width="40" height="20" uuid="d7"/><box><pen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{Jml Alpha}]]></textFieldExpression></textField>
+            <textField><reportElement x="510" y="0" width="40" height="20" uuid="d8"/><box><pen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{Jml Izin}]]></textFieldExpression></textField>
+            <textField><reportElement x="550" y="0" width="40" height="20" uuid="d9"/><box><pen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{Jml Sakit}]]></textFieldExpression></textField>
+            <textField><reportElement x="590" y="0" width="40" height="20" uuid="d10"/><box><pen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{Total Hadir}]]></textFieldExpression></textField>
+            <textField><reportElement x="630" y="0" width="50" height="20" uuid="d11"/><box><pen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{% Alpha}]]></textFieldExpression></textField>
+            <textField><reportElement x="680" y="0" width="122" height="20" uuid="d12"/><box><pen lineWidth="0.5"/></box><textElement textAlignment="Center" verticalAlignment="Middle"/><textFieldExpression><![CDATA[$F{Status Risiko}]]></textFieldExpression></textField>
+        </band>
+    </detail>
+</jasperReport>

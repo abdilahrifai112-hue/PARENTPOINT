@@ -18,6 +18,13 @@ cd temp_build
 jar xf ..\lib\mysql-connector-java-8.0.28.jar
 jar xf ..\lib\sqlite-jdbc-3.41.2.2.jar
 jar xf ..\lib\jcalendar-1.4.jar
+jar xf ..\lib\commons-beanutils-1.9.4.jar
+jar xf ..\lib\commons-collections-3.2.2.jar
+jar xf ..\lib\commons-collections4-4.4.jar
+jar xf ..\lib\commons-digester-2.1.jar
+jar xf ..\lib\commons-logging-1.2.jar
+jar xf ..\lib\ecj-3.21.0.jar
+jar xf ..\lib\jasperreports-6.20.6.jar
 rmdir /s /q META-INF 2>nul
 cd ..
 
