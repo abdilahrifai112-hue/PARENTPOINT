@@ -20,6 +20,12 @@ dir /s /b src\*.java > sources.txt
 echo Mengkompilasi semua file Java...
 "C:\Program Files\Java\jdk-21\bin\javac.exe" -source 8 -target 8 -cp "lib\*" -d build2\classes -sourcepath src @sources.txt
 
+echo Menyalin assets (gambar, laporan, dll)...
+xcopy src\*.jpg build2\classes\ /s /y >nul 2>nul
+xcopy src\*.png build2\classes\ /s /y >nul 2>nul
+xcopy src\*.jrxml build2\classes\ /s /y >nul 2>nul
+xcopy src\*.jasper build2\classes\ /s /y >nul 2>nul
+
 echo Membuat file MANIFEST...
 echo Manifest-Version: 1.0> manifest.txt
 echo Main-Class: parentpoint.LOGIN.LOGIN>> manifest.txt
