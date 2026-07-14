@@ -12,7 +12,20 @@ import java.sql.Statement;
 import java.sql.SQLException;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
+
 import parentpoint.koneksi.koneksi;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Font;
+import java.awt.Component;
+import javax.swing.BorderFactory;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
+import parentpoint.util.DesignUtil;
+import com.toedter.calendar.JDateChooser;
+import java.text.SimpleDateFormat;
 
 /**
  *
@@ -20,28 +33,18 @@ import parentpoint.koneksi.koneksi;
  */
 public class report extends javax.swing.JFrame {
 
-    /**
-     * Creates new form report
-     */
-    private javax.swing.JTable jTable1;
-    
     public report() {
         initComponents();
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
         setTitle("PARENT POINT - Laporan Kehadiran");
         setLocationRelativeTo(null);
-        
-        // Setup JTable di ScrollPane
-        jTable1 = new javax.swing.JTable();
-        jTable1.setFont(new java.awt.Font("Times New Roman", 0, 13));
-        jTable1.getTableHeader().setFont(new java.awt.Font("Times New Roman", 1, 13));
-        jScrollPane2.setViewportView(jTable1);
         
         // Load data kelas ke ComboBox
         loadKelas();
         
-        // Set placeholder untuk tanggal
-        jTextField1.setText("2026-06-16");
-        jTextField2.setText("2026-06-18");
+        // Set placeholder untuk tanggal (dihapus karena JDateChooser)
+        dateDari.setDate(new java.util.Date());
+        dateSampai.setDate(new java.util.Date());
         
         // Action tombol Tampilkan
         jButton1.addActionListener(new java.awt.event.ActionListener() {
@@ -56,6 +59,71 @@ public class report extends javax.swing.JFrame {
                 resetForm();
             }
         });
+        
+        // Action tombol Cetak
+        btnCetak.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cetakLaporan();
+            }
+        });
+        
+        // Action cari langsung (realtime)
+        txtCari.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                tampilkanLaporan();
+            }
+        });
+        
+        styleComponents();
+    }
+    
+    private void cetakLaporan() {
+        try {
+            java.sql.Connection conn = koneksi.getConnection();
+            
+            // Mengambil parameter dari UI
+            String kelas = (String) jComboBox1.getSelectedItem();
+            String dariTanggal = new SimpleDateFormat("yyyy-MM-dd").format(dateDari.getDate());
+            String sampaiTanggal = new SimpleDateFormat("yyyy-MM-dd").format(dateSampai.getDate());
+            String cari = txtCari.getText().trim();
+            
+            java.util.HashMap<String, Object> parameters = new java.util.HashMap<>();
+            parameters.put("p_dari", dariTanggal);
+            parameters.put("p_sampai", sampaiTanggal);
+            parameters.put("p_kelas", kelas);
+            parameters.put("p_cari", "%" + cari + "%");
+            
+            String resourcePath = "/parentpoint/report/report_kehadiran.jrxml";
+            java.io.InputStream is = getClass().getResourceAsStream(resourcePath);
+            if (is == null) {
+                JOptionPane.showMessageDialog(this, "File desain report tidak ditemukan di dalam aplikasi!");
+                return;
+            }
+            
+            // Menggunakan Java Reflection agar source code tetap bisa dikompilasi 
+            // walaupun library Jasper belum ada di folder lib/
+            Class<?> jrXmlLoaderClass = Class.forName("net.sf.jasperreports.engine.xml.JRXmlLoader");
+            java.lang.reflect.Method loadMethod = jrXmlLoaderClass.getMethod("load", java.io.InputStream.class);
+            Object jasperDesign = loadMethod.invoke(null, is);
+            
+            Class<?> compileManagerClass = Class.forName("net.sf.jasperreports.engine.JasperCompileManager");
+            java.lang.reflect.Method compileMethod = compileManagerClass.getMethod("compileReport", Class.forName("net.sf.jasperreports.engine.design.JasperDesign"));
+            Object jasperReport = compileMethod.invoke(null, jasperDesign);
+            
+            Class<?> fillManagerClass = Class.forName("net.sf.jasperreports.engine.JasperFillManager");
+            java.lang.reflect.Method fillMethod = fillManagerClass.getMethod("fillReport", Class.forName("net.sf.jasperreports.engine.JasperReport"), java.util.Map.class, java.sql.Connection.class);
+            Object jasperPrint = fillMethod.invoke(null, jasperReport, parameters, conn);
+            
+            Class<?> viewerClass = Class.forName("net.sf.jasperreports.view.JasperViewer");
+            java.lang.reflect.Method viewMethod = viewerClass.getMethod("viewReport", Class.forName("net.sf.jasperreports.engine.JasperPrint"), boolean.class);
+            viewMethod.invoke(null, jasperPrint, false);
+            
+        } catch (ClassNotFoundException e) {
+            JOptionPane.showMessageDialog(this, "Library JasperReports (iReport) belum dimasukkan ke dalam project!\nSilakan jalankan aplikasi dari dalam NetBeans jika library sudah ditambahkan.", "Library Tidak Ditemukan", JOptionPane.WARNING_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Gagal mencetak laporan: " + e.getMessage(), "Error Cetak", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
     }
     
     private void loadKelas() {
@@ -81,14 +149,16 @@ public class report extends javax.swing.JFrame {
     
     private void tampilkanLaporan() {
         String kelas = (String) jComboBox1.getSelectedItem();
-        String dariTanggal = jTextField1.getText().trim();
-        String sampaiTanggal = jTextField2.getText().trim();
+        String cari = txtCari.getText().trim();
         
-        if (dariTanggal.isEmpty() || sampaiTanggal.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Tanggal harus diisi! Format: yyyy-MM-dd", 
-                "Peringatan", JOptionPane.WARNING_MESSAGE);
+        if (dateDari.getDate() == null || dateSampai.getDate() == null) {
+            // Hindari popup yang mengganggu saat mengetik di fitur Cari,
+            // cukup abort pencarian jika tanggal kosong.
             return;
         }
+        
+        String dariTanggal = new SimpleDateFormat("yyyy-MM-dd").format(dateDari.getDate());
+        String sampaiTanggal = new SimpleDateFormat("yyyy-MM-dd").format(dateSampai.getDate());
         
         Connection conn = koneksi.getConnection();
         if (conn != null) {
@@ -103,13 +173,20 @@ public class report extends javax.swing.JFrame {
                 if (kelas != null && !kelas.equals("Semua Kelas")) {
                     sql += "AND k.nama_kelas = ? ";
                 }
+                if (!cari.isEmpty()) {
+                    sql += "AND s.nama LIKE ? ";
+                }
                 sql += "ORDER BY h.tanggal, s.nama";
                 
                 PreparedStatement ps = conn.prepareStatement(sql);
                 ps.setString(1, dariTanggal);
                 ps.setString(2, sampaiTanggal);
+                int pIndex = 3;
                 if (kelas != null && !kelas.equals("Semua Kelas")) {
-                    ps.setString(3, kelas);
+                    ps.setString(pIndex++, kelas);
+                }
+                if (!cari.isEmpty()) {
+                    ps.setString(pIndex++, "%" + cari + "%");
                 }
                 
                 ResultSet rs = ps.executeQuery();
@@ -168,8 +245,9 @@ public class report extends javax.swing.JFrame {
     
     private void resetForm() {
         jComboBox1.setSelectedIndex(0);
-        jTextField1.setText("");
-        jTextField2.setText("");
+        dateDari.setDate(new java.util.Date());
+        dateSampai.setDate(new java.util.Date());
+        txtCari.setText("");
         jLabel5.setText("0");
         jLabel7.setText("0");
         jLabel9.setText("0");
@@ -183,35 +261,65 @@ public class report extends javax.swing.JFrame {
      * regenerated by the Form Editor.
      */
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         jFrame1 = new javax.swing.JFrame();
         jRadioButtonMenuItem1 = new javax.swing.JRadioButtonMenuItem();
         jPanel1 = new javax.swing.JPanel();
+        lblHeader = new javax.swing.JLabel();
         jPanel2 = new javax.swing.JPanel();
         jPanel3 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jComboBox1 = new javax.swing.JComboBox<>();
+        jLabel12 = new javax.swing.JLabel();
+        txtCari = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
-        jTextField1 = new javax.swing.JTextField();
+        dateDari = new com.toedter.calendar.JDateChooser();
         jLabel3 = new javax.swing.JLabel();
-        jTextField2 = new javax.swing.JTextField();
+        dateSampai = new com.toedter.calendar.JDateChooser();
         jButton1 = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
+        btnCetak = new javax.swing.JButton();
         jPanel4 = new javax.swing.JPanel();
+        jPanelCardHadirBar = new javax.swing.JPanel();
+        jPanelCardHadirContent = new javax.swing.JPanel();
         jLabel4 = new javax.swing.JLabel();
         jLabel5 = new javax.swing.JLabel();
         jPanel5 = new javax.swing.JPanel();
+        jPanelCardSakitBar = new javax.swing.JPanel();
+        jPanelCardSakitContent = new javax.swing.JPanel();
         jLabel6 = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
         jPanel6 = new javax.swing.JPanel();
+        jPanelCardIzinBar = new javax.swing.JPanel();
+        jPanelCardIzinContent = new javax.swing.JPanel();
         jLabel8 = new javax.swing.JLabel();
         jLabel9 = new javax.swing.JLabel();
         jPanel7 = new javax.swing.JPanel();
+        jPanelCardAlphaBar = new javax.swing.JPanel();
+        jPanelCardAlphaContent = new javax.swing.JPanel();
         jLabel10 = new javax.swing.JLabel();
         jLabel11 = new javax.swing.JLabel();
+        jTable1 = new javax.swing.JTable();
         jScrollPane2 = new javax.swing.JScrollPane();
+
+        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "NIS", "Nama Siswa", "Kelas", "Tanggal", "Status", "Keterangan"
+            }
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPane2.setViewportView(jTable1);
 
         javax.swing.GroupLayout jFrame1Layout = new javax.swing.GroupLayout(jFrame1.getContentPane());
         jFrame1.getContentPane().setLayout(jFrame1Layout);
@@ -227,20 +335,17 @@ public class report extends javax.swing.JFrame {
         jRadioButtonMenuItem1.setSelected(true);
         jRadioButtonMenuItem1.setText("jRadioButtonMenuItem1");
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
-        jPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 2));
+        jPanel1.setBackground(new java.awt.Color(25, 55, 109));
+        jPanel1.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 20, 0, 20));
+        jPanel1.setPreferredSize(new java.awt.Dimension(0, 60));
+        jPanel1.setLayout(new java.awt.BorderLayout());
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
-        );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 100, Short.MAX_VALUE)
-        );
+        lblHeader.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        lblHeader.setForeground(new java.awt.Color(255, 255, 255));
+        lblHeader.setText("Laporan Kehadiran Siswa");
+        jPanel1.add(lblHeader, java.awt.BorderLayout.WEST);
 
         jPanel2.setBorder(new javax.swing.border.MatteBorder(null));
 
@@ -253,44 +358,66 @@ public class report extends javax.swing.JFrame {
         jComboBox1.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         jComboBox1.setPreferredSize(new java.awt.Dimension(100, 50));
 
-        jLabel2.setText("Dari Tanggal :");
-        jLabel2.setPreferredSize(new java.awt.Dimension(100, 50));
+        jLabel12.setText("Cari Siswa :");
+        jLabel12.setPreferredSize(new java.awt.Dimension(80, 50));
 
-        jTextField1.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
-        jTextField1.setPreferredSize(new java.awt.Dimension(100, 50));
+        txtCari.setPreferredSize(new java.awt.Dimension(120, 50));
+
+        jLabel2.setText("Dari Tanggal :");
+        jLabel2.setPreferredSize(new java.awt.Dimension(80, 50));
+
+        dateDari.setPreferredSize(new java.awt.Dimension(120, 50));
+        dateDari.setDateFormatString("yyyy-MM-dd");
 
         jLabel3.setText("Sampai :");
-        jLabel3.setPreferredSize(new java.awt.Dimension(100, 50));
+        jLabel3.setPreferredSize(new java.awt.Dimension(60, 50));
 
-        jTextField2.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
-        jTextField2.setPreferredSize(new java.awt.Dimension(100, 50));
+        dateSampai.setPreferredSize(new java.awt.Dimension(120, 50));
+        dateSampai.setDateFormatString("yyyy-MM-dd");
 
+        jButton1.setBackground(new java.awt.Color(25, 55, 109));
+        jButton1.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
+        jButton1.setForeground(new java.awt.Color(255, 255, 255));
         jButton1.setText("Tampilkan");
-        jButton1.setPreferredSize(new java.awt.Dimension(150, 50));
-
+        jButton1.setPreferredSize(new java.awt.Dimension(110, 35));
+        
+        jButton2.setBackground(new java.awt.Color(230, 126, 34));
+        jButton2.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
+        jButton2.setForeground(new java.awt.Color(255, 255, 255));
         jButton2.setText("Reset");
-        jButton2.setPreferredSize(new java.awt.Dimension(150, 50));
+        jButton2.setPreferredSize(new java.awt.Dimension(90, 35));
 
+        btnCetak.setBackground(new java.awt.Color(46, 204, 113));
+        btnCetak.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
+        btnCetak.setForeground(new java.awt.Color(255, 255, 255));
+        btnCetak.setText("Cetak (iReport)");
+        btnCetak.setPreferredSize(new java.awt.Dimension(130, 35));
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
+                .addGap(5, 5, 5)
                 .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(67, 67, 67)
+                .addGap(10, 10, 10)
+                .addComponent(jLabel12, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(5, 5, 5)
+                .addComponent(txtCari, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(10, 10, 10)
                 .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(49, 49, 49)
+                .addGap(5, 5, 5)
+                .addComponent(dateDari, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(10, 10, 10)
                 .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(33, 33, 33)
-                .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(90, 90, 90)
+                .addGap(5, 5, 5)
+                .addComponent(dateSampai, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(15, 15, 15)
                 .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 117, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(10, 10, 10)
+                .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(10, 10, 10)
+                .addComponent(btnCetak, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
@@ -300,130 +427,129 @@ public class report extends javax.swing.JFrame {
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel12, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtCari, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(dateDari, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(dateSampai, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnCetak, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        jPanel4.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+        jPanel4.setBackground(new java.awt.Color(255, 255, 255));
+        jPanel4.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED),
+            javax.swing.BorderFactory.createEmptyBorder(10, 15, 10, 15)));
         jPanel4.setPreferredSize(new java.awt.Dimension(200, 100));
+        jPanel4.setLayout(new java.awt.BorderLayout());
 
-        jLabel4.setText("Total Hadir");
+        jPanelCardHadirBar.setBackground(new java.awt.Color(39, 174, 96));
+        jPanelCardHadirBar.setPreferredSize(new java.awt.Dimension(0, 4));
+        jPanelCardHadirBar.setLayout(new java.awt.FlowLayout());
+        jPanel4.add(jPanelCardHadirBar, java.awt.BorderLayout.NORTH);
 
+        jPanelCardHadirContent.setBackground(new java.awt.Color(255, 255, 255));
+        jPanelCardHadirContent.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 0, 0, 0));
+        jPanelCardHadirContent.setLayout(new java.awt.BorderLayout(0, 5));
+
+        jLabel4.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
+        jLabel4.setForeground(new java.awt.Color(127, 140, 141));
+        jLabel4.setText("HADIR");
+        jPanelCardHadirContent.add(jLabel4, java.awt.BorderLayout.NORTH);
+
+        jLabel5.setFont(new java.awt.Font("Segoe UI", 1, 36)); // NOI18N
+        jLabel5.setForeground(new java.awt.Color(39, 174, 96));
         jLabel5.setText("0");
+        jPanelCardHadirContent.add(jLabel5, java.awt.BorderLayout.CENTER);
 
-        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
-        jPanel4.setLayout(jPanel4Layout);
-        jPanel4Layout.setHorizontalGroup(
-            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel4Layout.createSequentialGroup()
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(jLabel4))
-                    .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addGap(71, 71, 71)
-                        .addComponent(jLabel5)))
-                .addContainerGap(104, Short.MAX_VALUE))
-        );
-        jPanel4Layout.setVerticalGroup(
-            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel4Layout.createSequentialGroup()
-                .addComponent(jLabel4)
-                .addGap(18, 18, 18)
-                .addComponent(jLabel5)
-                .addGap(0, 40, Short.MAX_VALUE))
-        );
+        jPanel4.add(jPanelCardHadirContent, java.awt.BorderLayout.CENTER);
 
-        jPanel5.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+        jPanel5.setBackground(new java.awt.Color(255, 255, 255));
+        jPanel5.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED),
+            javax.swing.BorderFactory.createEmptyBorder(10, 15, 10, 15)));
         jPanel5.setPreferredSize(new java.awt.Dimension(200, 100));
+        jPanel5.setLayout(new java.awt.BorderLayout());
 
-        jLabel6.setText("Total Sakit");
+        jPanelCardSakitBar.setBackground(new java.awt.Color(243, 156, 18));
+        jPanelCardSakitBar.setPreferredSize(new java.awt.Dimension(0, 4));
+        jPanelCardSakitBar.setLayout(new java.awt.FlowLayout());
+        jPanel5.add(jPanelCardSakitBar, java.awt.BorderLayout.NORTH);
 
+        jPanelCardSakitContent.setBackground(new java.awt.Color(255, 255, 255));
+        jPanelCardSakitContent.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 0, 0, 0));
+        jPanelCardSakitContent.setLayout(new java.awt.BorderLayout(0, 5));
+
+        jLabel6.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
+        jLabel6.setForeground(new java.awt.Color(127, 140, 141));
+        jLabel6.setText("SAKIT");
+        jPanelCardSakitContent.add(jLabel6, java.awt.BorderLayout.NORTH);
+
+        jLabel7.setFont(new java.awt.Font("Segoe UI", 1, 36)); // NOI18N
+        jLabel7.setForeground(new java.awt.Color(243, 156, 18));
         jLabel7.setText("0");
+        jPanelCardSakitContent.add(jLabel7, java.awt.BorderLayout.CENTER);
 
-        javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
-        jPanel5.setLayout(jPanel5Layout);
-        jPanel5Layout.setHorizontalGroup(
-            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel5Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel6)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
-                .addContainerGap(96, Short.MAX_VALUE)
-                .addComponent(jLabel7)
-                .addGap(93, 93, 93))
-        );
-        jPanel5Layout.setVerticalGroup(
-            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel5Layout.createSequentialGroup()
-                .addComponent(jLabel6)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jLabel7)
-                .addGap(0, 42, Short.MAX_VALUE))
-        );
+        jPanel5.add(jPanelCardSakitContent, java.awt.BorderLayout.CENTER);
 
-        jPanel6.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+        jPanel6.setBackground(new java.awt.Color(255, 255, 255));
+        jPanel6.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED),
+            javax.swing.BorderFactory.createEmptyBorder(10, 15, 10, 15)));
         jPanel6.setPreferredSize(new java.awt.Dimension(200, 100));
+        jPanel6.setLayout(new java.awt.BorderLayout());
 
-        jLabel8.setText("Total Izin");
+        jPanelCardIzinBar.setBackground(new java.awt.Color(52, 152, 219));
+        jPanelCardIzinBar.setPreferredSize(new java.awt.Dimension(0, 4));
+        jPanelCardIzinBar.setLayout(new java.awt.FlowLayout());
+        jPanel6.add(jPanelCardIzinBar, java.awt.BorderLayout.NORTH);
 
+        jPanelCardIzinContent.setBackground(new java.awt.Color(255, 255, 255));
+        jPanelCardIzinContent.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 0, 0, 0));
+        jPanelCardIzinContent.setLayout(new java.awt.BorderLayout(0, 5));
+
+        jLabel8.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
+        jLabel8.setForeground(new java.awt.Color(127, 140, 141));
+        jLabel8.setText("IZIN");
+        jPanelCardIzinContent.add(jLabel8, java.awt.BorderLayout.NORTH);
+
+        jLabel9.setFont(new java.awt.Font("Segoe UI", 1, 36)); // NOI18N
+        jLabel9.setForeground(new java.awt.Color(52, 152, 219));
         jLabel9.setText("0");
+        jPanelCardIzinContent.add(jLabel9, java.awt.BorderLayout.CENTER);
 
-        javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
-        jPanel6.setLayout(jPanel6Layout);
-        jPanel6Layout.setHorizontalGroup(
-            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel6Layout.createSequentialGroup()
-                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel6Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(jLabel8))
-                    .addGroup(jPanel6Layout.createSequentialGroup()
-                        .addGap(91, 91, 91)
-                        .addComponent(jLabel9)))
-                .addContainerGap(98, Short.MAX_VALUE))
-        );
-        jPanel6Layout.setVerticalGroup(
-            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel6Layout.createSequentialGroup()
-                .addComponent(jLabel8)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jLabel9)
-                .addGap(0, 42, Short.MAX_VALUE))
-        );
+        jPanel6.add(jPanelCardIzinContent, java.awt.BorderLayout.CENTER);
 
-        jPanel7.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+        jPanel7.setBackground(new java.awt.Color(255, 255, 255));
+        jPanel7.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED),
+            javax.swing.BorderFactory.createEmptyBorder(10, 15, 10, 15)));
         jPanel7.setPreferredSize(new java.awt.Dimension(200, 100));
+        jPanel7.setLayout(new java.awt.BorderLayout());
 
-        jLabel10.setText("Total Alpha");
+        jPanelCardAlphaBar.setBackground(new java.awt.Color(231, 76, 60));
+        jPanelCardAlphaBar.setPreferredSize(new java.awt.Dimension(0, 4));
+        jPanelCardAlphaBar.setLayout(new java.awt.FlowLayout());
+        jPanel7.add(jPanelCardAlphaBar, java.awt.BorderLayout.NORTH);
 
+        jPanelCardAlphaContent.setBackground(new java.awt.Color(255, 255, 255));
+        jPanelCardAlphaContent.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 0, 0, 0));
+        jPanelCardAlphaContent.setLayout(new java.awt.BorderLayout(0, 5));
+
+        jLabel10.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
+        jLabel10.setForeground(new java.awt.Color(127, 140, 141));
+        jLabel10.setText("ALPHA");
+        jPanelCardAlphaContent.add(jLabel10, java.awt.BorderLayout.NORTH);
+
+        jLabel11.setFont(new java.awt.Font("Segoe UI", 1, 36)); // NOI18N
+        jLabel11.setForeground(new java.awt.Color(231, 76, 60));
         jLabel11.setText("0");
+        jPanelCardAlphaContent.add(jLabel11, java.awt.BorderLayout.CENTER);
 
-        javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
-        jPanel7.setLayout(jPanel7Layout);
-        jPanel7Layout.setHorizontalGroup(
-            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel7Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jLabel11)
-                    .addComponent(jLabel10))
-                .addContainerGap(101, Short.MAX_VALUE))
-        );
-        jPanel7Layout.setVerticalGroup(
-            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel7Layout.createSequentialGroup()
-                .addComponent(jLabel10)
-                .addGap(18, 18, 18)
-                .addComponent(jLabel11)
-                .addGap(0, 40, Short.MAX_VALUE))
-        );
+        jPanel7.add(jPanelCardAlphaContent, java.awt.BorderLayout.CENTER);
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -435,11 +561,11 @@ public class report extends javax.swing.JFrame {
                     .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 1001, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(84, 84, 84)
+                        .addGap(20, 20, 20)
                         .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(79, 79, 79)
+                        .addGap(20, 20, 20)
                         .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(82, 82, 82)
+                        .addGap(20, 20, 20)
                         .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -516,7 +642,234 @@ public class report extends javax.swing.JFrame {
         });
     }
 
+    private void styleComponents() {
+        this.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
+        setTitle("PARENT POINT - Laporan Kehadiran");
+        getContentPane().setBackground(DesignUtil.BG_MAIN);
+        
+        // Reset top header panel
+        jPanel1.removeAll();
+        jPanel1.setLayout(new BorderLayout());
+        jPanel1.setBackground(DesignUtil.BG_HEADER);
+        jPanel1.setPreferredSize(new java.awt.Dimension(0, 60));
+        jPanel1.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
+        
+        JLabel lblHeader = new JLabel("Laporan Kehadiran Siswa");
+        lblHeader.setFont(DesignUtil.FONT_SUBTITLE);
+        lblHeader.setForeground(Color.WHITE);
+        jPanel1.add(lblHeader, BorderLayout.WEST);
+        
+        // Style filter panel (jPanel3)
+        jPanel3.setBackground(DesignUtil.BG_CARD);
+        jPanel3.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(DesignUtil.BORDER_COLOR, 1),
+            BorderFactory.createEmptyBorder(10, 15, 10, 15)
+        ));
+        
+        // Style labels
+        jLabel1.setFont(DesignUtil.FONT_BODY_BOLD);
+        jLabel1.setForeground(DesignUtil.TEXT_PRIMARY);
+        jLabel1.setText("Kelas:");
+        
+        jLabel2.setFont(DesignUtil.FONT_BODY_BOLD);
+        jLabel2.setForeground(DesignUtil.TEXT_PRIMARY);
+        jLabel2.setText("Dari Tanggal:");
+        
+        jLabel3.setFont(DesignUtil.FONT_BODY_BOLD);
+        jLabel3.setForeground(DesignUtil.TEXT_PRIMARY);
+        jLabel3.setText("Sampai:");
+        
+        jLabel12.setFont(DesignUtil.FONT_BODY_BOLD);
+        jLabel12.setForeground(DesignUtil.TEXT_PRIMARY);
+        jLabel12.setText("Cari Siswa:");
+        
+        // Style textfields and combobox
+        jComboBox1.setFont(DesignUtil.FONT_BODY);
+        jComboBox1.setBackground(Color.WHITE);
+        jComboBox1.setPreferredSize(new java.awt.Dimension(120, 35));
+        
+        txtCari.setFont(DesignUtil.FONT_BODY);
+        txtCari.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(DesignUtil.BORDER_COLOR),
+            BorderFactory.createEmptyBorder(5, 10, 5, 10)
+        ));
+        txtCari.setPreferredSize(new java.awt.Dimension(120, 35));
+        
+        dateDari.setFont(DesignUtil.FONT_BODY);
+        dateDari.setPreferredSize(new java.awt.Dimension(120, 35));
+        
+        dateSampai.setFont(DesignUtil.FONT_BODY);
+        dateSampai.setPreferredSize(new java.awt.Dimension(120, 35));
+        
+        // Buttons
+        jButton1.setUI(new javax.swing.plaf.basic.BasicButtonUI());
+        jButton1.setFont(DesignUtil.FONT_BUTTON);
+        jButton1.setBackground(DesignUtil.PRIMARY);
+        jButton1.setForeground(Color.WHITE);
+        jButton1.setFocusPainted(false);
+        jButton1.setBorderPainted(false);
+        jButton1.setOpaque(true);
+        jButton1.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        jButton1.setPreferredSize(new java.awt.Dimension(110, 35));
+        
+        jButton2.setUI(new javax.swing.plaf.basic.BasicButtonUI());
+        jButton2.setFont(DesignUtil.FONT_BUTTON);
+        jButton2.setBackground(DesignUtil.WARNING);
+        jButton2.setForeground(Color.WHITE);
+        jButton2.setFocusPainted(false);
+        jButton2.setBorderPainted(false);
+        jButton2.setOpaque(true);
+        jButton2.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        jButton2.setPreferredSize(new java.awt.Dimension(90, 35));
+        
+        // Hover effects
+        jButton1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent e) { jButton1.setBackground(DesignUtil.PRIMARY_LIGHT); }
+            public void mouseExited(java.awt.event.MouseEvent e) { jButton1.setBackground(DesignUtil.PRIMARY); }
+        });
+        jButton2.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent e) { jButton2.setBackground(DesignUtil.WARNING.darker()); }
+            public void mouseExited(java.awt.event.MouseEvent e) { jButton2.setBackground(DesignUtil.WARNING); }
+        });
+        
+        btnCetak.setUI(new javax.swing.plaf.basic.BasicButtonUI());
+        btnCetak.setFont(DesignUtil.FONT_BUTTON);
+        btnCetak.setBackground(new Color(46, 204, 113));
+        btnCetak.setForeground(Color.WHITE);
+        btnCetak.setFocusPainted(false);
+        btnCetak.setBorderPainted(false);
+        btnCetak.setOpaque(true);
+        btnCetak.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnCetak.setPreferredSize(new java.awt.Dimension(130, 35));
+        btnCetak.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent e) { btnCetak.setBackground(new Color(39, 174, 96)); }
+            public void mouseExited(java.awt.event.MouseEvent e) { btnCetak.setBackground(new Color(46, 204, 113)); }
+        });
+        
+        // Cards styling (jPanel4, jPanel5, jPanel6, jPanel7)
+        JPanel[] cardPanels = {jPanel4, jPanel5, jPanel6, jPanel7};
+        JLabel[] cardTitles = {jLabel4, jLabel6, jLabel8, jLabel10};
+        JLabel[] cardValues = {jLabel5, jLabel7, jLabel9, jLabel11};
+        Color[] accentColors = {DesignUtil.SUCCESS, DesignUtil.WARNING, DesignUtil.ACCENT, DesignUtil.DANGER};
+        String[] titlesText = {"HADIR", "SAKIT", "IZIN", "ALPHA"};
+        
+        for (int i = 0; i < cardPanels.length; i++) {
+            JPanel card = cardPanels[i];
+            card.setBackground(Color.WHITE);
+            card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(230, 230, 230)),
+                BorderFactory.createEmptyBorder(10, 15, 10, 15)
+            ));
+            
+            // Re-layout cards programmatically to be nice
+            card.removeAll();
+            card.setLayout(new BorderLayout());
+            
+            // Accent bar
+            JPanel bar = new JPanel();
+            bar.setBackground(accentColors[i]);
+            bar.setPreferredSize(new java.awt.Dimension(0, 4));
+            card.add(bar, BorderLayout.NORTH);
+            
+            JPanel content = new JPanel();
+            content.setLayout(new javax.swing.BoxLayout(content, javax.swing.BoxLayout.Y_AXIS));
+            content.setBackground(Color.WHITE);
+            content.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
+            
+            JLabel lblTitle = cardTitles[i];
+            lblTitle.setText(titlesText[i]);
+            lblTitle.setFont(DesignUtil.FONT_CARD_LABEL);
+            lblTitle.setForeground(DesignUtil.TEXT_SECONDARY);
+            lblTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+            
+            JLabel lblVal = cardValues[i];
+            lblVal.setFont(DesignUtil.FONT_CARD_NUMBER);
+            lblVal.setForeground(accentColors[i]);
+            lblVal.setAlignmentX(Component.LEFT_ALIGNMENT);
+            
+            content.add(lblTitle);
+            content.add(javax.swing.Box.createVerticalStrut(5));
+            content.add(lblVal);
+            
+            card.add(content, BorderLayout.CENTER);
+        }
+        
+        // Table styling
+        DesignUtil.styleTable(jTable1);
+        jScrollPane2.setBorder(BorderFactory.createLineBorder(DesignUtil.BORDER_COLOR));
+        jScrollPane2.getViewport().setBackground(Color.WHITE);
+        
+        // Re-layout JFrame content pane and jPanel2 programmatically to be fully responsive
+        getContentPane().setLayout(new BorderLayout());
+        getContentPane().add(jPanel1, BorderLayout.NORTH);
+        getContentPane().add(jPanel2, BorderLayout.CENTER);
+        
+        jPanel2.removeAll();
+        jPanel2.setLayout(new BorderLayout(0, 15));
+        jPanel2.add(jPanel3, BorderLayout.NORTH);
+        
+        JPanel centerPanel = new JPanel(new BorderLayout(0, 15));
+        centerPanel.setBackground(DesignUtil.BG_MAIN);
+        
+        JPanel cardsContainer = new JPanel(new java.awt.GridLayout(1, 4, 15, 0));
+        cardsContainer.setBackground(DesignUtil.BG_MAIN);
+        cardsContainer.add(jPanel4);
+        cardsContainer.add(jPanel5);
+        cardsContainer.add(jPanel6);
+        cardsContainer.add(jPanel7);
+        
+        centerPanel.add(cardsContainer, BorderLayout.NORTH);
+        centerPanel.add(jScrollPane2, BorderLayout.CENTER);
+        
+        jPanel2.add(centerPanel, BorderLayout.CENTER);
+        
+        // Main wrappers styling to prevent cutoffs
+        jPanel2.setBackground(DesignUtil.BG_MAIN);
+        jPanel2.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
+        
+        pack();
+// setSize removed for responsiveness
+        setLocationRelativeTo(null);
+        
+        revalidate();
+        repaint();
+
+        // ── Tombol Kembali ke Dashboard ──
+        addKembaliButton();
+    }
+
+    private void addKembaliButton() {
+        javax.swing.JButton btnKembali = new javax.swing.JButton("⬅  Kembali ke Dashboard");
+        btnKembali.setUI(new javax.swing.plaf.basic.BasicButtonUI());
+        btnKembali.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 12));
+        btnKembali.setBackground(new java.awt.Color(71, 85, 105));
+        btnKembali.setForeground(java.awt.Color.WHITE);
+        btnKembali.setFocusPainted(false);
+        btnKembali.setBorderPainted(false);
+        btnKembali.setOpaque(true);
+        btnKembali.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        btnKembali.setPreferredSize(new java.awt.Dimension(195, 35));
+        btnKembali.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 15, 0, 15));
+        btnKembali.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent e) { btnKembali.setBackground(new java.awt.Color(51, 65, 85)); }
+            public void mouseExited(java.awt.event.MouseEvent e) { btnKembali.setBackground(new java.awt.Color(71, 85, 105)); }
+        });
+        btnKembali.addActionListener(e -> {
+            for (java.awt.Window w : java.awt.Window.getWindows()) {
+                if (w instanceof parentpoint.ds.dsmainframe && w.isDisplayable()) {
+                    w.setVisible(true); w.toFront(); dispose(); return;
+                }
+            }
+            new parentpoint.ds.dsmainframe().setVisible(true);
+            dispose();
+        });
+        jPanel1.add(btnKembali, java.awt.BorderLayout.EAST);
+        jPanel1.revalidate();
+        jPanel1.repaint();
+    }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnCetak;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JComboBox<String> jComboBox1;
@@ -524,6 +877,7 @@ public class report extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
+    private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -539,9 +893,20 @@ public class report extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel5;
     private javax.swing.JPanel jPanel6;
     private javax.swing.JPanel jPanel7;
+    private javax.swing.JPanel jPanelCardAlphaBar;
+    private javax.swing.JPanel jPanelCardAlphaContent;
+    private javax.swing.JPanel jPanelCardHadirBar;
+    private javax.swing.JPanel jPanelCardHadirContent;
+    private javax.swing.JPanel jPanelCardIzinBar;
+    private javax.swing.JPanel jPanelCardIzinContent;
+    private javax.swing.JPanel jPanelCardSakitBar;
+    private javax.swing.JPanel jPanelCardSakitContent;
     private javax.swing.JRadioButtonMenuItem jRadioButtonMenuItem1;
     private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JTextField jTextField1;
-    private javax.swing.JTextField jTextField2;
+    private javax.swing.JTable jTable1;
+    private com.toedter.calendar.JDateChooser dateDari;
+    private com.toedter.calendar.JDateChooser dateSampai;
+    private javax.swing.JTextField txtCari;
+    private javax.swing.JLabel lblHeader;
     // End of variables declaration//GEN-END:variables
 }

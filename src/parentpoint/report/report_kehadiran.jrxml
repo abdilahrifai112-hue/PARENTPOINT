@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" 
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" 
+              name="report_kehadiran" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="abcdef12-3456-7890-abcd-ef1234567890">
+    <parameter name="p_dari" class="java.lang.String"/>
+    <parameter name="p_sampai" class="java.lang.String"/>
+    <parameter name="p_kelas" class="java.lang.String"/>
+    <parameter name="p_cari" class="java.lang.String"/>
+    
+    <queryString>
+        <![CDATA[
+        SELECT s.nis, s.nama, k.nama_kelas, h.tanggal, h.status, h.keterangan 
+        FROM kehadiran h 
+        JOIN siswa s ON h.siswa_id = s.id 
+        LEFT JOIN kelas k ON s.kelas_id = k.id 
+        WHERE h.tanggal BETWEEN $P{p_dari} AND $P{p_sampai} 
+        AND ($P{p_kelas} = 'Semua Kelas' OR k.nama_kelas = $P{p_kelas})
+        AND ($P{p_cari} = '%%' OR s.nama LIKE $P{p_cari})
+        ORDER BY h.tanggal, s.nama
+        ]]>
+    </queryString>
+    <field name="nis" class="java.lang.String"/>
+    <field name="nama" class="java.lang.String"/>
+    <field name="nama_kelas" class="java.lang.String"/>
+    <field name="tanggal" class="java.lang.String"/>
+    <field name="status" class="java.lang.String"/>
+    <field name="keterangan" class="java.lang.String"/>
+    <background>
+        <band splitType="Stretch"/>
+    </background>
+    <title>
+        <band height="50" splitType="Stretch">
+            <staticText>
+                <reportElement x="0" y="0" width="555" height="30" uuid="11111111-1111-1111-1111-111111111111"/>
+                <textElement textAlignment="Center">
+                    <font size="18" isBold="true"/>
+                </textElement>
+                <text><![CDATA[LAPORAN KEHADIRAN SISWA]]></text>
+            </staticText>
+        </band>
+    </title>
+    <columnHeader>
+        <band height="20" splitType="Stretch">
+            <staticText><reportElement x="0" y="0" width="80" height="20" uuid="22222222-2222-2222-2222-222222222222"/><textElement><font isBold="true"/></textElement><text><![CDATA[NIS]]></text></staticText>
+            <staticText><reportElement x="80" y="0" width="150" height="20" uuid="33333333-3333-3333-3333-333333333333"/><textElement><font isBold="true"/></textElement><text><![CDATA[Nama Siswa]]></text></staticText>
+            <staticText><reportElement x="230" y="0" width="70" height="20" uuid="44444444-4444-4444-4444-444444444444"/><textElement><font isBold="true"/></textElement><text><![CDATA[Kelas]]></text></staticText>
+            <staticText><reportElement x="300" y="0" width="80" height="20" uuid="55555555-5555-5555-5555-555555555555"/><textElement><font isBold="true"/></textElement><text><![CDATA[Tanggal]]></text></staticText>
+            <staticText><reportElement x="380" y="0" width="70" height="20" uuid="66666666-6666-6666-6666-666666666666"/><textElement><font isBold="true"/></textElement><text><![CDATA[Status]]></text></staticText>
+            <staticText><reportElement x="450" y="0" width="105" height="20" uuid="77777777-7777-7777-7777-777777777777"/><textElement><font isBold="true"/></textElement><text><![CDATA[Keterangan]]></text></staticText>
+        </band>
+    </columnHeader>
+    <detail>
+        <band height="20" splitType="Stretch">
+            <textField><reportElement x="0" y="0" width="80" height="20" uuid="88888888-8888-8888-8888-888888888888"/><textFieldExpression><![CDATA[$F{nis}]]></textFieldExpression></textField>
+            <textField><reportElement x="80" y="0" width="150" height="20" uuid="99999999-9999-9999-9999-999999999999"/><textFieldExpression><![CDATA[$F{nama}]]></textFieldExpression></textField>
+            <textField><reportElement x="230" y="0" width="70" height="20" uuid="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"/><textFieldExpression><![CDATA[$F{nama_kelas}]]></textFieldExpression></textField>
+            <textField><reportElement x="300" y="0" width="80" height="20" uuid="bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"/><textFieldExpression><![CDATA[$F{tanggal}]]></textFieldExpression></textField>
+            <textField><reportElement x="380" y="0" width="70" height="20" uuid="cccccccc-cccc-cccc-cccc-cccccccccccc"/><textFieldExpression><![CDATA[$F{status}]]></textFieldExpression></textField>
+            <textField><reportElement x="450" y="0" width="105" height="20" uuid="dddddddd-dddd-dddd-dddd-dddddddddddd"/><textFieldExpression><![CDATA[$F{keterangan}]]></textFieldExpression></textField>
+        </band>
+    </detail>
+</jasperReport>
